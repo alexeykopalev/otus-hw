@@ -1,0 +1,30 @@
+[grafana]
+172.16.16.253   ansible_host=172.16.16.253   ansible_user=akopalev
+[grafana:vars]
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q bastion"'
+
+[prometheus]
+10.10.1.3   ansible_host=10.10.1.3   ansible_user=akopalev
+[prometheus:vars]
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q bastion"'
+
+[kibana]
+172.16.16.252   ansible_host=172.16.16.252   ansible_user=akopalev
+[kibana:vars]
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q bastion"'
+
+[elast]
+10.10.1.4   ansible_host=10.10.1.4   ansible_user=akopalev
+[elast:vars]
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q bastion"'
+
+[logstash]
+10.10.1.4   ansible_host=10.10.1.4   ansible_user=akopalev
+[logstash:vars]
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q bastion"'
+
+[webservers]
+10.10.1.29  ansible_host=10.10.1.29 ansible_user=akopalev
+10.10.2.6  ansible_host=10.10.2.6 ansible_user=akopalev
+[webservers:vars]
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q bastion"'

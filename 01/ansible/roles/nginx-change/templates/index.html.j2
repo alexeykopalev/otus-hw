@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>dip-akopalev.ru</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+   <body>
+       <h1>Server info</h1>
+       <h1>CPU - {{ var_cpu }}</h1>
+       <h1>RAM - {{ ansible_facts.memtotal_mb }} Mb</h1>
+       <h1>HDD - {{ ansible_devices.vda.size }}</h1>
+       <h1>IP - {{ ansible_host }}</h1>
+   </body>
+</html>
+

@@ -1,0 +1,35 @@
+---
+# tasks file for nginx-change
+
+- name: Get CPU
+  ansible.builtin.shell: lscpu | grep 'Model name' | awk '{$1=$2=""; print $0}'
+  register: cpu_result
+
+- name: Set variable CPU
+  ansible.builtin.set_fact:
+    var_cpu: "{{ cpu_result.stdout }}" 
+
+- name: Install nginx web server
+  ansible.builtin.apt:
+    name: nginx
+    update_cache: yes
+
+- name: Copy Nginx config
+  ansible.builtin.copy:
+    src: files/nginx.conf
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Setup Nginx index.html
+  ansible.builtin.template:
+    src: "templates/index.html.j2"
+    dest: "/var/www/html/index.nginx-debian.html"
+
+
+- name: Start Nginx
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: yes

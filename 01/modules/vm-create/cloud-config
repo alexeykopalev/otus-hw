@@ -1,0 +1,8 @@
+#cloud-config
+users:
+  - name: akopalev
+    groups: wheel
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCxHlMc4ySp0W7oIBf1aRAxdIaoFyx3IZ+PNpAvDgluLZxmNLJ22ImYIcQkloY9tLwhD6guIdkoWtSusrjPfAO5bEPwKfa5GI51Qoq76gZ5/KyMtnYAARDyuSbMjeqaAJaF71oGKC4032hTlXtvMf7wAy8nfrP3zrRE7PDsqLh5vuVctAa78SFHp92394GYU0LkeCbE8dN+RW7T1wFoK7jK2HfVfLZMXtiJT3pji7jtkB7SKW8hNCeojKylZSW/AQhEyo32aPjZHomtQDkJ4DPVkPiGmcpDtpQ5u0fm0soEkODlKzECiNZM2pQq/gRdSmvObMbCkot5yjS4+uAqxl4jnzJU57lWDtFrIvkBDGJ2Y564r/pctq9uWp/QSbPgEv8uT/QaIoVeYMO723HHSzLRPVslrQiwkCU1qTFFHFCA2OlGJLZF05mGEi7pDAv2EX6PmfTdKwh8IsamEUgZsYbo+/RWKi56VDFGsZttrW3kVQ9mYEUAgitkDWnwpFO8DVU= alexey@vivobook-fedora
