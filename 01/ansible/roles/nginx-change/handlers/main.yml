@@ -1,2 +1,7 @@
 ---
 # handlers file for nginx-change
+- name: nginx systemd
+  systemd:
+    name: nginx
+    enabled: yes
+    state: started

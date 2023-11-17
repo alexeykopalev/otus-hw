@@ -10,7 +10,7 @@ module "network-create" {
   name_subnetwork1 = "subnet-1"
 }
 
-module "server" {
+module "nginxSRV-create" {
   source = "./modules/vm-create"
   name = "web-srv1"
   platform = "standard-v1"

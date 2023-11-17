@@ -1,38 +1,6 @@
-- name: install node-exporter and nginxlog-exporter
+- name: install nginx and nginx-change
   hosts: webservers
   become: yes
   roles:
-  - node-exporter
-  - nginxlog-exporter
-  - filebeat
   - nginx-change
 
-- name: install prometheus
-  hosts: prometheus
-  become: yes
-  roles:
-  - prometheus
-
-- name: install grafana
-  hosts: grafana
-  become: yes
-  roles:
-  - grafana
-
-- name: install elasticsearch
-  hosts: elast
-  become: yes
-  roles:
-  - elast
-
-- name: install logstash
-  hosts: logstash
-  become: yes
-  roles:
-  - logstash
-
-- name: install kibana
-  hosts: kibana
-  become: yes
-  roles:
-  - kibana
