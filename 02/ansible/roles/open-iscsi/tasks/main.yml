@@ -1,0 +1,8 @@
+- name: apt-get update
+  apt:
+    update_cache: yes
+- name: Install open-iscsi
+  apt:
+    name:
+      - open-iscsi
+    state: present

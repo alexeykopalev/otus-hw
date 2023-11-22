@@ -1,0 +1,5 @@
+- name: install targetcli and create lun
+  hosts: iscsi-srv
+  become: yes
+  roles:
+  - targetcli
