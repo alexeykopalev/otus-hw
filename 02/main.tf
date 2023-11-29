@@ -8,7 +8,6 @@ module "network-create" {
   source = "./modules/network-create"
   name_network1 = "network1"
   name_subnetwork1 = "subnet-1"
-  name_subnetwork2 = "subnet-2"
   name_subnetbast = "subnet-bast"
 }
 
@@ -37,7 +36,7 @@ resource "yandex_compute_disk" "iscsi-disk" {
   name       = "iscsi-disk"
   type       = "network-hdd"
   zone       = "ru-central1-b"
-  size       = 10
+  size       = 15
 }
 
 resource "yandex_compute_instance" "iscsi-srv" {
@@ -55,8 +54,9 @@ resource "yandex_compute_instance" "iscsi-srv" {
 
   boot_disk {
     initialize_params {
-      image_id = "fd8o41nbel1uqngk0op2"
-      size = 5
+//      image_id = "fd8o41nbel1uqngk0op2"
+      image_id = "fd83rqq627fa1mdphnog"
+      size = 10
     }
   }
 
@@ -84,8 +84,9 @@ module "pcs" {
   zone = "ru-central1-b"
   hostname = "pcs${count.index+1}"
   cpu = 2
-  ram = 4
-  core_fraction = 20
+  ram = 2
+  core_fraction = 5
+  preemptible = true
   disk_size = 10
   subnetwork_id = module.network-create.subnetwork1_id
   nat = false

@@ -28,13 +28,14 @@ variable "ram" {
 }
 
 variable "image_id" {
-  default = "fd8o41nbel1uqngk0op2"
+//  default = "fd8o41nbel1uqngk0op2"
+  default = "fd83rqq627fa1mdphnog"
   description = "ID default image for VM"
 }
 
 variable "disk_size"{
   description = "HDD size in Gb"
-  default = 3
+  default = 10
 }
 
 #  variable "sec_disk_id" {

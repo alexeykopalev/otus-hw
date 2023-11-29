@@ -1,11 +1,11 @@
-[iscsi-srv]
+[iscsi_srv]
 10.10.1.3   ansible_host=10.10.1.3   ansible_user=akopalev
-[iscsi-srv:vars]
+[iscsi_srv:vars]
 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q bastion"'
 
-[pcs-hosts]
-10.10.1.10  ansible_host=10.10.1.10 ansible_user=akopalev
-10.10.1.11  ansible_host=10.10.1.11 ansible_user=akopalev
-10.10.1.12  ansible_host=10.10.1.12 ansible_user=akopalev
-[pcs-hosts:vars]
+[pcs_hosts]
+pcs1 ansible_host=10.10.1.10 ansible_user=akopalev
+pcs2 ansible_host=10.10.1.11 ansible_user=akopalev
+pcs3 ansible_host=10.10.1.12 ansible_user=akopalev
+[pcs_hosts:vars]
 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q bastion"'

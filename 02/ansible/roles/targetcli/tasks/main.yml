@@ -1,19 +1,20 @@
-- name: apt-get update
-  apt:
-    update_cache: yes
 - name: Install targetcli
-  apt:
+  yum:
     name:
-      - targetcli-fb
+      - targetcli
     state: present
-# - name: This command will change the working directory to somedir/
-#   ansible.builtin.shell:
-#     cmd: ls -l | grep log
-#     chdir: somedir/
+
 - name: Run targetcli configure
   ansible.builtin.command: "{{ item }}"
   with_items:
     - targetcli /backstores/block create disk01 /dev/vdb
-    - targetcli /iscsi create iqn.2023-11.ru.otus:storage.target00
-    - targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/luns create /backstores/block/disk01 lun=1
-    - targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/acls create iqn.1993-08.org.debian:01:84cdc7f825a1
+    - targetcli /iscsi create {{ iqn_server }}
+    - targetcli /iscsi/{{ iqn_server }}/tpg1/luns create /backstores/block/disk01 lun=1
+    - targetcli /iscsi/{{ iqn_server }}/tpg1/acls create {{ iqn_pcs1 }}
+    - targetcli /iscsi/{{ iqn_server }}/tpg1/acls create {{ iqn_pcs2 }}
+    - targetcli /iscsi/{{ iqn_server }}/tpg1/acls create {{ iqn_pcs3 }}
+
+# - name: This command will change the working directory to somedir/
+#   ansible.builtin.shell:
+#     cmd: ls -l | grep log
+#     chdir: somedir/
