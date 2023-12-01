@@ -1,11 +1,20 @@
 - name: install targetcli, create lun
   hosts: iscsi_srv
+  gather_facts: false
   become: yes
   roles:
   - targetcli
 
 - name: install iscsi-client
   hosts: pcs_hosts
+  gather_facts: false
   become: yes
   roles:
   - iscsi-client
+
+- name: install ha-cluster
+  hosts: pcs_hosts
+  gather_facts: false
+  become: yes
+  roles:
+  - ha-cluster

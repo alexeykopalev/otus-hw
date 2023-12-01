@@ -4,6 +4,11 @@
       - targetcli
     state: present
 
+- name: Gather targetcli status
+  command: "targetcli /backstores/block/disk01 info"
+  register: targetcli_status
+  ignore_errors: true
+
 - name: Run targetcli configure
   ansible.builtin.command: "{{ item }}"
   with_items:
@@ -13,6 +18,7 @@
     - targetcli /iscsi/{{ iqn_server }}/tpg1/acls create {{ iqn_pcs1 }}
     - targetcli /iscsi/{{ iqn_server }}/tpg1/acls create {{ iqn_pcs2 }}
     - targetcli /iscsi/{{ iqn_server }}/tpg1/acls create {{ iqn_pcs3 }}
+  when: targetcli_status.rc | int != 0
 
 # - name: This command will change the working directory to somedir/
 #   ansible.builtin.shell:

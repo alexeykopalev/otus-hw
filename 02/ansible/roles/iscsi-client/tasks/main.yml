@@ -27,10 +27,10 @@
 #     msg: "Host: {{ inventory_hostname }}"
 #   with_inventory_hostnames: pcs_hosts
 
-- name: restart_iscsid
-  systemd_service:
-    name: iscsid
-    state: restarted
+# - name: restart_iscsid
+#   systemd_service:
+#     name: iscsid
+#     state: restarted
 
 - name: iscsi_login
   ansible.builtin.command: "{{ item }}"
