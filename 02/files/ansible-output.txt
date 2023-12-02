@@ -1,0 +1,227 @@
+[alexey@vivobook-fedora ansible]$ ansible-playbook playbook.yml 
+
+PLAY [install targetcli, create lun] ***************************************************************************************************************************************************
+
+TASK [targetcli : Install targetcli] ***************************************************************************************************************************************************
+changed: [10.10.1.3]
+
+TASK [targetcli : Gather targetcli status] *********************************************************************************************************************************************
+fatal: [10.10.1.3]: FAILED! => {"changed": true, "cmd": ["targetcli", "/backstores/block/disk01", "info"], "delta": "0:00:00.408836", "end": "2023-12-02 08:44:30.852669", "msg": "non-zero return code", "rc": 1, "start": "2023-12-02 08:44:30.443833", "stderr": "No such path /backstores/block/disk01", "stderr_lines": ["No such path /backstores/block/disk01"], "stdout": "Warning: Could not load preferences file /root/.targetcli/prefs.bin.", "stdout_lines": ["Warning: Could not load preferences file /root/.targetcli/prefs.bin."]}
+...ignoring
+
+TASK [targetcli : Run targetcli configure] *********************************************************************************************************************************************
+changed: [10.10.1.3] => (item=targetcli /backstores/block create disk01 /dev/vdb)
+changed: [10.10.1.3] => (item=targetcli /iscsi create iqn.2023-11.ru.otus:storage.target00)
+changed: [10.10.1.3] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/luns create /backstores/block/disk01 lun=1)
+changed: [10.10.1.3] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:cf70d4c706e)
+changed: [10.10.1.3] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:f5cfb68ca8f)
+changed: [10.10.1.3] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:e77b7b4d46a9)
+
+PLAY [install iscsi-client] ************************************************************************************************************************************************************
+
+TASK [iscsi-client : Install open-iscsi] ***********************************************************************************************************************************************
+changed: [pcs1]
+changed: [pcs3]
+changed: [pcs2]
+
+TASK [iscsi-client : change InitiatorName pcs1] ****************************************************************************************************************************************
+skipping: [pcs2]
+skipping: [pcs3]
+changed: [pcs1]
+
+TASK [iscsi-client : change InitiatorName pcs2] ****************************************************************************************************************************************
+skipping: [pcs1]
+skipping: [pcs3]
+changed: [pcs2]
+
+TASK [iscsi-client : change InitiatorName pcs3] ****************************************************************************************************************************************
+skipping: [pcs1]
+skipping: [pcs2]
+changed: [pcs3]
+
+TASK [iscsi-client : iscsi_login] ******************************************************************************************************************************************************
+changed: [pcs3] => (item=iscsiadm -m discovery -t st -p 10.10.1.3)
+changed: [pcs1] => (item=iscsiadm -m discovery -t st -p 10.10.1.3)
+changed: [pcs2] => (item=iscsiadm -m discovery -t st -p 10.10.1.3)
+changed: [pcs3] => (item=iscsiadm -m node -l -T iqn.2023-11.ru.otus:storage.target00)
+changed: [pcs1] => (item=iscsiadm -m node -l -T iqn.2023-11.ru.otus:storage.target00)
+changed: [pcs2] => (item=iscsiadm -m node -l -T iqn.2023-11.ru.otus:storage.target00)
+
+RUNNING HANDLER [iscsi-client : start_iscsi] *******************************************************************************************************************************************
+changed: [pcs1]
+changed: [pcs2]
+changed: [pcs3]
+
+RUNNING HANDLER [iscsi-client : restart_iscsid] ****************************************************************************************************************************************
+changed: [pcs3]
+changed: [pcs1]
+changed: [pcs2]
+
+PLAY [install ha-cluster] **************************************************************************************************************************************************************
+
+TASK [ha-cluster : Install the Packages] ***********************************************************************************************************************************************
+changed: [pcs3]
+changed: [pcs1]
+changed: [pcs2]
+
+TASK [ha-cluster : Start the pcs service] **********************************************************************************************************************************************
+changed: [pcs2]
+changed: [pcs3]
+changed: [pcs1]
+
+TASK [ha-cluster : Set the password for the use hacluster] *****************************************************************************************************************************
+[DEPRECATION WARNING]: Encryption using the Python crypt module is deprecated. The Python crypt module is deprecated and will be removed from Python 3.13. Install the passlib library 
+for continued encryption functionality. This feature will be removed in version 2.17. Deprecation warnings can be disabled by setting deprecation_warnings=False in ansible.cfg.
+[DEPRECATION WARNING]: Encryption using the Python crypt module is deprecated. The Python crypt module is deprecated and will be removed from Python 3.13. Install the passlib library 
+for continued encryption functionality. This feature will be removed in version 2.17. Deprecation warnings can be disabled by setting deprecation_warnings=False in ansible.cfg.
+[DEPRECATION WARNING]: Encryption using the Python crypt module is deprecated. The Python crypt module is deprecated and will be removed from Python 3.13. Install the passlib library 
+for continued encryption functionality. This feature will be removed in version 2.17. Deprecation warnings can be disabled by setting deprecation_warnings=False in ansible.cfg.
+changed: [pcs3]
+changed: [pcs1]
+changed: [pcs2]
+
+TASK [ha-cluster : Authenticate the cluster] *******************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Gather cluster status] **********************************************************************************************************************************************
+fatal: [pcs1]: FAILED! => {"changed": true, "cmd": ["pcs", "cluster", "status"], "delta": "0:00:00.310085", "end": "2023-12-02 08:46:30.007479", "msg": "non-zero return code", "rc": 1, "start": "2023-12-02 08:46:29.697394", "stderr": "Error: cluster is not currently running on this node", "stderr_lines": ["Error: cluster is not currently running on this node"], "stdout": "", "stdout_lines": []}
+...ignoring
+fatal: [pcs3]: FAILED! => {"changed": true, "cmd": ["pcs", "cluster", "status"], "delta": "0:00:00.336419", "end": "2023-12-02 08:46:29.971015", "msg": "non-zero return code", "rc": 1, "start": "2023-12-02 08:46:29.634596", "stderr": "Error: cluster is not currently running on this node", "stderr_lines": ["Error: cluster is not currently running on this node"], "stdout": "", "stdout_lines": []}
+...ignoring
+fatal: [pcs2]: FAILED! => {"changed": true, "cmd": ["pcs", "cluster", "status"], "delta": "0:00:00.359140", "end": "2023-12-02 08:46:30.098922", "msg": "non-zero return code", "rc": 1, "start": "2023-12-02 08:46:29.739782", "stderr": "Error: cluster is not currently running on this node", "stderr_lines": ["Error: cluster is not currently running on this node"], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [ha-cluster : Setup the HA-Cluster] ***********************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Start the HA-Cluster] ***********************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Enable the HA-Cluster] **********************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Setting stonith-enabled=false] **************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Setting 'No Quorum' Policy] *****************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Creating 'clvmd' Resource] ******************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Creating 'dlm' Resource] ********************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Creating First Constraint] ******************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Creating Physical Volume] *******************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Enable cluster lvm] *************************************************************************************************************************************************
+changed: [pcs1]
+changed: [pcs3]
+changed: [pcs2]
+
+TASK [ha-cluster : Creating Volume Group] **********************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Pause] **************************************************************************************************************************************************************
+Pausing for 30 seconds
+(ctrl+C then 'C' = continue early, ctrl+C then 'A' = abort)
+ok: [pcs1]
+
+TASK [ha-cluster : Creating Logical Volume] ********************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Formatting Logical Volume With GFS2] ********************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Creating Cluster File System] ***************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Setting Starting Order Part 1] **************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Setting Starting Order Part 2] **************************************************************************************************************************************
+changed: [pcs1]
+
+TASK [ha-cluster : Gather cluster status] **********************************************************************************************************************************************
+changed: [pcs1]
+changed: [pcs3]
+changed: [pcs2]
+
+TASK [ha-cluster : Check and print the cluster Status] *********************************************************************************************************************************
+ok: [pcs1] => {
+    "msg": {
+        "changed": true,
+        "cmd": [
+            "pcs",
+            "cluster",
+            "status"
+        ],
+        "delta": "0:00:01.204413",
+        "end": "2023-12-02 08:47:58.405881",
+        "failed": false,
+        "msg": "",
+        "rc": 0,
+        "start": "2023-12-02 08:47:57.201468",
+        "stderr": "",
+        "stderr_lines": [],
+        "stdout": "Cluster Status:\n Stack: corosync\n Current DC: pcs3 (version 1.1.23-1.el7_9.1-9acf116022) - partition with quorum\n Last updated: Sat Dec  2 08:47:57 2023\n Last change: Sat Dec  2 08:47:55 2023 by root via cibadmin on pcs1\n 3 nodes configured\n 9 resource instances configured\n\nPCSD Status:\n  pcs1: Online\n  pcs3: Online\n  pcs2: Online",
+        "stdout_lines": [
+            "Cluster Status:",
+            " Stack: corosync",
+            " Current DC: pcs3 (version 1.1.23-1.el7_9.1-9acf116022) - partition with quorum",
+            " Last updated: Sat Dec  2 08:47:57 2023",
+            " Last change: Sat Dec  2 08:47:55 2023 by root via cibadmin on pcs1",
+            " 3 nodes configured",
+            " 9 resource instances configured",
+            "",
+            "PCSD Status:",
+            "  pcs1: Online",
+            "  pcs3: Online",
+            "  pcs2: Online"
+        ]
+    }
+}
+
+TASK [ha-cluster : Gather resource status] *********************************************************************************************************************************************
+changed: [pcs3]
+changed: [pcs1]
+changed: [pcs2]
+
+TASK [ha-cluster : Check and print the cluster Status] *********************************************************************************************************************************
+ok: [pcs1] => {
+    "msg": {
+        "changed": true,
+        "cmd": [
+            "pcs",
+            "resource",
+            "show"
+        ],
+        "delta": "0:00:00.240648",
+        "end": "2023-12-02 08:48:00.817186",
+        "failed": false,
+        "msg": "",
+        "rc": 0,
+        "start": "2023-12-02 08:48:00.576538",
+        "stderr": "",
+        "stderr_lines": [],
+        "stdout": " Clone Set: clvmd-clone [clvmd]\n     Started: [ pcs1 pcs2 pcs3 ]\n Clone Set: dlm-clone [dlm]\n     Started: [ pcs1 pcs2 pcs3 ]\n Clone Set: clusterfs-clone [clusterfs]\n     Started: [ pcs1 pcs2 pcs3 ]",
+        "stdout_lines": [
+            " Clone Set: clvmd-clone [clvmd]",
+            "     Started: [ pcs1 pcs2 pcs3 ]",
+            " Clone Set: dlm-clone [dlm]",
+            "     Started: [ pcs1 pcs2 pcs3 ]",
+            " Clone Set: clusterfs-clone [clusterfs]",
+            "     Started: [ pcs1 pcs2 pcs3 ]"
+        ]
+    }
+}
+
+PLAY RECAP *****************************************************************************************************************************************************************************
+10.10.1.3                  : ok=3    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=1   
+pcs1                       : ok=31   changed=28   unreachable=0    failed=0    skipped=2    rescued=0    ignored=1   
+pcs2                       : ok=12   changed=12   unreachable=0    failed=0    skipped=2    rescued=0    ignored=1   
+pcs3                       : ok=12   changed=12   unreachable=0    failed=0    skipped=2    rescued=0    ignored=1   
