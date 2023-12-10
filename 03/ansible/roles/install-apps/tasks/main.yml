@@ -1,0 +1,5 @@
+- name: Install targetcli
+  yum:
+    name:
+      - nano
+    state: present

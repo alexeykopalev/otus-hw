@@ -1,0 +1,6 @@
+- name: install-apps
+  hosts: backend_hosts
+  gather_facts: false
+  become: yes
+  roles:
+  - install-apps
