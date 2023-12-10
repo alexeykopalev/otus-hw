@@ -1,5 +1,36 @@
-- name: Install targetcli
-  yum:
-    name:
-      - nano
-    state: present
+- name: Update repositories cache and install nginx-full php-fpm php-mysql
+  apt:
+    name: 
+      - nginx-full 
+      - php-fpm 
+      - php-mysql
+    update_cache: yes
+
+- name: Remove default site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Copy wordpress conf
+  copy:
+    src: files/wordpress
+    dest: /etc/nginx/sites-available/wordpress
+
+- name: Create a symbolic link wordpress
+  file:
+    src: /etc/nginx/sites-available/wordpress
+    dest: /etc/nginx/sites-enabled/wordpress
+    state: link
+
+- name: Download wordpress
+  get_url:
+    url: https://wordpress.org/latest.tar.gz
+    dest: /root/latest.tar.gz
+
+- name: Extract wordpress
+  command: "{{ item }}"
+  with_items:
+    - tar -xzf /root/latest.tar.gz
+    - mv /home/akopalev/wordpress/wp-config-sample.php /home/akopalev/wordpress/wp-config.php
+    - mv /home/akopalev/wordpress /var/www/
+    - chown -R www-data:www-data /var/www/wordpress

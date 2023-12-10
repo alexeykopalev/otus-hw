@@ -28,8 +28,9 @@ variable "ram" {
 }
 
 variable "image_id" {
-//  default = "fd8o41nbel1uqngk0op2"
-  default = "fd83rqq627fa1mdphnog"
+#  default = "fd8jmrpcq17rp009ecdh" # Debian 10
+#  default = "fd83rqq627fa1mdphnog" # CentOS 7
+  default = "fd87t5gt48uc6feiibm8" # Debian 12
   description = "ID default image for VM"
 }
 
