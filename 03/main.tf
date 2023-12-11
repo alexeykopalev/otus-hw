@@ -61,6 +61,7 @@ module "nginx" {
   core_fraction = 20
   preemptible = true
   disk_size = 10
+  image_id = "fd84nt41ssoaapgql97p"
   subnetwork_id = module.network-create.subnetwork1_id
   nat = true
   ip = "10.10.1.3"
@@ -79,8 +80,32 @@ module "db" {
   core_fraction = 5
   preemptible = true
   disk_size = 10
+  image_id = "fd84nt41ssoaapgql97p"
   subnetwork_id = module.network-create.subnetwork1_id
   nat = false
   ip = "10.10.1.4"
   sec-gr = [module.sg-create.internal-sg]
+}
+
+resource "yandex_dns_zone" "zone1" {
+  name        = "zone1"
+  description = "Public zone"
+  zone        = "dip-akopalev.ru."
+  public      = true
+}
+
+resource "yandex_dns_recordset" "rs-1" {
+  zone_id = yandex_dns_zone.zone1.id
+  name    = "dip-akopalev.ru."
+  ttl     = 600
+  type    = "A"
+  data    = ["158.160.75.138"]
+}
+
+resource "yandex_dns_recordset" "rs-2" {
+  zone_id = yandex_dns_zone.zone1.id
+  name    = "www"
+  ttl     = 600
+  type    = "CNAME"
+  data    = ["dip-akopalev.ru"]
 }
