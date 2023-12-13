@@ -1,0 +1,93 @@
+alexey@home-ub22:~/Otus/otus-hw/03$ ansible-playbook ansible/playbook.yml 
+
+PLAY [install-mysql] ****************************************************************************************************************************************************************
+
+TASK [db : Update repositories cache and install mysql-server] **********************************************************************************************************************
+changed: [db-srv]
+
+TASK [db : start and enable mysql service] ******************************************************************************************************************************************
+ok: [db-srv]
+
+TASK [db : Sets the root password] **************************************************************************************************************************************************
+[WARNING]: Option column_case_sensitive is not provided. The default is now false, so the column's name will be uppercased. The default will be changed to true in community.mysql
+4.0.0.
+changed: [db-srv]
+
+TASK [db : Save root password in .my.cnf] *******************************************************************************************************************************************
+changed: [db-srv]
+
+TASK [db : creating wp_db] **********************************************************************************************************************************************************
+changed: [db-srv]
+
+TASK [db : creating mysql user (medium_post)] ***************************************************************************************************************************************
+changed: [db-srv]
+
+TASK [db : Enable remote login to mysql] ********************************************************************************************************************************************
+changed: [db-srv]
+
+TASK [db : Restart mysql] ***********************************************************************************************************************************************************
+changed: [db-srv]
+
+PLAY [install-wordpress] ************************************************************************************************************************************************************
+
+TASK [wordpress : Update repositories cache and install nginx-full php-fpm php-mysql] ***********************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+TASK [wordpress : Remove default site] **********************************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+TASK [wordpress : Copy wordpress conf] **********************************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+TASK [wordpress : Create a symbolic link wordpress] *********************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+TASK [wordpress : Download wordpress] ***********************************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+TASK [wordpress : Extract wordpress] ************************************************************************************************************************************************
+changed: [backend1] => (item=tar -xzf /root/latest.tar.gz)
+changed: [backend1] => (item=mv /home/akopalev/wordpress /var/www/)
+changed: [backend2] => (item=tar -xzf /root/latest.tar.gz)
+changed: [backend1] => (item=chown -R www-data:www-data /var/www/wordpress)
+changed: [backend2] => (item=mv /home/akopalev/wordpress /var/www/)
+changed: [backend2] => (item=chown -R www-data:www-data /var/www/wordpress)
+
+TASK [wordpress : Template a file to /var/www/wordpress/wp-config.php] **************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+TASK [wordpress : Start Nginx Service] **********************************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+PLAY [install-loadbalancer] *********************************************************************************************************************************************************
+
+TASK [loadbalancer : Install nginx] *************************************************************************************************************************************************
+changed: [nginx-srv]
+
+TASK [loadbalancer : Remove file /etc/nginx/sites-available/default] ****************************************************************************************************************
+changed: [nginx-srv]
+
+TASK [loadbalancer : Remove file /etc/nginx/sites-enabled/default] ******************************************************************************************************************
+changed: [nginx-srv]
+
+TASK [loadbalancer : Copy file /etc/nginx/sites-available/upstreams] ****************************************************************************************************************
+changed: [nginx-srv]
+
+TASK [loadbalancer : Create a symbolic default link to /etc/nginx/sites-available/upstreams] ****************************************************************************************
+changed: [nginx-srv]
+
+TASK [loadbalancer : Start Nginx Service] *******************************************************************************************************************************************
+changed: [nginx-srv]
+
+PLAY RECAP **************************************************************************************************************************************************************************
+backend1                   : ok=8    changed=4    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+backend2                   : ok=8    changed=4    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+db-srv                     : ok=8    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+nginx-srv                  : ok=6    changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   

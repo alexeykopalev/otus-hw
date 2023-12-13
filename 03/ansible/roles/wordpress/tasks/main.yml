@@ -36,17 +36,17 @@
     dest: /etc/nginx/sites-enabled/wordpress
     state: link
 
-# - name: Download wordpress
-#   get_url:
-#     url: https://ru.wordpress.org/latest-ru_RU.tar.gz
-#     dest: /root/latest.tar.gz
+- name: Download wordpress
+  get_url:
+    url: https://ru.wordpress.org/latest-ru_RU.tar.gz
+    dest: /root/latest.tar.gz
 
-# - name: Extract wordpress
-#   command: "{{ item }}"
-#   with_items:
-#     - tar -xzf /root/latest.tar.gz
-#     - mv /home/akopalev/wordpress /var/www/
-#     - chown -R www-data:www-data /var/www/wordpress
+- name: Extract wordpress
+  command: "{{ item }}"
+  with_items:
+    - tar -xzf /root/latest.tar.gz
+    - mv /home/akopalev/wordpress /var/www/
+    - chown -R www-data:www-data /var/www/wordpress
 
 - name: Template a file to /var/www/wordpress/wp-config.php
   ansible.builtin.template:
