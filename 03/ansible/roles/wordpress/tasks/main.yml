@@ -4,7 +4,21 @@
       - nginx-full 
       - php-fpm 
       - php-mysql
+      - php-curl
+      - php-json
+      - php-gd
+      - php-mbstring
+      - php-intl
+      - php-bcmath
+      - php-bz2
+      - php-readline
+      - php-zip
+      - php-xml
+      - php-xmlrpc
+      - php-soap
+      - php-imagick
     update_cache: yes
+    state: present
 
 - name: Remove default site
   file:
@@ -13,7 +27,7 @@
 
 - name: Copy wordpress conf
   copy:
-    src: files/wordpress
+    src: files/wordpress_new
     dest: /etc/nginx/sites-available/wordpress
 
 - name: Create a symbolic link wordpress
@@ -22,15 +36,36 @@
     dest: /etc/nginx/sites-enabled/wordpress
     state: link
 
-- name: Download wordpress
-  get_url:
-    url: https://wordpress.org/latest.tar.gz
-    dest: /root/latest.tar.gz
+# - name: Download wordpress
+#   get_url:
+#     url: https://ru.wordpress.org/latest-ru_RU.tar.gz
+#     dest: /root/latest.tar.gz
 
-- name: Extract wordpress
-  command: "{{ item }}"
-  with_items:
-    - tar -xzf /root/latest.tar.gz
-    - mv /home/akopalev/wordpress/wp-config-sample.php /home/akopalev/wordpress/wp-config.php
-    - mv /home/akopalev/wordpress /var/www/
-    - chown -R www-data:www-data /var/www/wordpress
+# - name: Extract wordpress
+#   command: "{{ item }}"
+#   with_items:
+#     - tar -xzf /root/latest.tar.gz
+#     - mv /home/akopalev/wordpress /var/www/
+#     - chown -R www-data:www-data /var/www/wordpress
+
+- name: Template a file to /var/www/wordpress/wp-config.php
+  ansible.builtin.template:
+    src: wp-config.php.j2
+    dest: /var/www/wordpress/wp-config.php
+    owner: www-data
+    group: www-data
+    mode: '0644'
+
+# - name: Copy wp-config.php
+#   copy:
+#     src: files/wp-config.php
+#     dest: /var/www/wordpress
+
+# - name: Extract wordpress
+#   command: chown -R www-data:www-data /var/www/wordpress
+
+- name: Start Nginx Service
+  ansible.builtin.systemd:
+    name: nginx
+    state: restarted
+    enabled: yes

@@ -1,0 +1,54 @@
+- name: Update repositories cache and install mysql-server
+  apt:
+    name: 
+      - mysql-server
+      - python3-mysqldb
+    state: present
+    update_cache: yes
+
+- name: start and enable mysql service
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Sets the root password
+  mysql_user:
+    name: "{{ mysql_root_user }}"
+    password: "{{ mysql_root_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+
+- name: Save root password in .my.cnf
+  template:
+    src: root-my.cnf.j2
+    dest: /root/.my.cnf
+    owner: root
+    mode: '0600'
+
+- name: creating wp_db
+  mysql_db:
+    name: "{{db_name}}"
+    login_host: "localhost"
+    login_user: "{{ mysql_root_user }}"
+    login_password: "{{ mysql_root_password }}"
+    state: present
+
+- name: creating mysql user (medium_post)
+  mysql_user:
+    name: "{{db_user}}"
+    password: "{{db_pass}}"
+    priv: 'wp_db.*:ALL'
+    host: '%'
+    state: present
+
+- name: Enable remote login to mysql
+  lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: '^bind-address'
+    line: 'bind-address = 0.0.0.0'
+    backup: yes
+
+- name: Restart mysql
+  service:
+    name: mysql
+    state: restarted

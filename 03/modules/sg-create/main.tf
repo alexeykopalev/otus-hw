@@ -44,6 +44,20 @@ resource "yandex_vpc_security_group" "internal-sg" {
     description    = "ping allow"
     v4_cidr_blocks = ["0.0.0.0/0"]
   }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "allow 3306"
+    v4_cidr_blocks = ["10.10.1.0/24"]
+    port           = 3306
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "allow http"
+    v4_cidr_blocks = ["10.10.1.0/24"]
+    port           = 80
+  }
 }
 
 resource "yandex_vpc_security_group" "external-sg" {

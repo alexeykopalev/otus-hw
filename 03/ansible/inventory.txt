@@ -1,10 +1,10 @@
 [nginx_hosts]
-10.10.1.3   ansible_host=10.10.1.3   ansible_user=akopalev
+nginx-srv ansible_host=10.10.1.3   ansible_user=akopalev
 [nginx_hosts:vars]
 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q bastion"'
 
 [db_hosts]
-10.10.1.4   ansible_host=10.10.1.3   ansible_user=akopalev
+db-srv ansible_host=10.10.1.4  ansible_user=akopalev
 [db_hosts:vars]
 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q bastion"'
 
