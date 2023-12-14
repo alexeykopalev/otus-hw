@@ -1,0 +1,33 @@
+- name: Install nginx
+  apt:
+    name:
+      - nginx
+    state: latest
+    update_cache: yes
+
+- name: Remove file /etc/nginx/sites-available/default
+  ansible.builtin.file:
+    path: /etc/nginx/sites-available/default
+    state: absent
+
+- name: Remove file /etc/nginx/sites-enabled/default
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Copy file /etc/nginx/sites-available/upstreams
+  ansible.builtin.copy:
+    src: upstreams
+    dest: /etc/nginx/sites-available/upstreams
+
+- name: Create a symbolic default link to /etc/nginx/sites-available/upstreams
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/upstreams
+    dest: /etc/nginx/sites-enabled/upstreams
+    state: link
+
+- name: Start Nginx Service
+  ansible.builtin.systemd:
+    name: nginx
+    state: restarted
+    enabled: yes

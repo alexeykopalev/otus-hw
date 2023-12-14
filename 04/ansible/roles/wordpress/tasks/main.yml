@@ -1,0 +1,112 @@
+- name: Import Nginx repo KEY
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://nginx.org/keys/nginx_signing.key
+
+- name: Installing Nginx Repository
+  ansible.builtin.yum_repository:
+    name: nginx
+    description: Nginx Repository
+    baseurl: http://nginx.org/packages/centos/$releasever/$basearch/
+    gpgcheck: yes
+
+# - name: Install EPEL repo
+#   ansible.builtin.dnf:
+#     name:
+#       - epel-release
+#     state: latest
+- name: install Nginx
+  ansible.builtin.dnf:
+    name: 
+      - nginx
+    state: latest
+
+- name: Import Remi KEY
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://rpms.remirepo.net/enterprise/8/RPM-GPG-KEY-remi
+
+- name: Installing Remi Repository
+  ansible.builtin.yum:
+    name: https://rpms.remirepo.net/enterprise/remi-release-8.rpm
+    state: latest
+    update_cache: yes
+
+- name: Enable PHP Remi Repository
+  ansible.builtin.command: "{{ item }}"
+  with_items: 
+    - dnf module reset php -y
+    - dnf module enable php:remi-8.2 -y
+
+- name: Install php-fpm and PHP extensions
+  ansible.builtin.dnf:
+    name:
+      - php-fpm
+      - php-json 
+      - php-mysqlnd
+      - php-curl
+      - php-dom
+      - php-exif
+      - php-fileinfo
+      - php-hash
+      - php-igbinary
+      - php-imagick
+      - php-intl
+      - php-mbstring
+      - php-openssl
+      - php-pcre
+      - php-xml
+      - php-zip
+    state: latest
+
+- name: change user in /etc/php-fpm.d/www.conf
+  ansible.builtin.lineinfile: 
+    dest: /etc/php-fpm.d/www.conf
+    regexp: '^user ='
+    insertbefore: BOF
+    line: 'user = nginx'
+
+- name: change a str
+  ansible.builtin.lineinfile: dest=/etc/php-fpm.d/www.conf
+              regexp='^group ='
+              insertbefore=BOF
+              line='group = nginx'
+
+- name: Copy wordpress conf
+  ansible.builtin.copy:
+    src: files/wordpress_new
+    dest: /etc/nginx/conf.d/dip-akopalev.ru.conf
+
+- name: Download wordpress
+  ansible.builtin.get_url:
+    url: https://ru.wordpress.org/latest-ru_RU.tar.gz
+    dest: /root/latest.tar.gz
+
+- name: Extract wordpress
+  ansible.builtin.command: "{{ item }}"
+  with_items:
+    - tar -xzf /root/latest.tar.gz
+    - mv /home/akopalev/wordpress /var/www/
+    - chown -R nginx:nginx /var/www/wordpress
+    - setsebool -P httpd_can_network_connect 1
+    - sudo restorecon -Rv /var/www/wordpress
+
+- name: Template a file to /var/www/wordpress/wp-config.php
+  ansible.builtin.template:
+    src: wp-config.php.j2
+    dest: /var/www/wordpress/wp-config.php
+    owner: nginx
+    group: nginx
+    mode: '0644'
+
+- name: Start Nginx Service
+  ansible.builtin.systemd:
+    name: nginx
+    state: restarted
+    enabled: yes
+
+- name: Start Nginx Service
+  ansible.builtin.systemd:
+    name: php-fpm
+    state: restarted
+    enabled: yes

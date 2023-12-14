@@ -1,0 +1,20 @@
+- name: install-mysql
+  hosts: db_hosts
+  gather_facts: false
+  become: yes
+  roles:
+  - db
+
+- name: install-wordpress
+  hosts: backend_hosts
+  gather_facts: false
+  become: yes
+  roles:
+  - wordpress
+
+- name: install-loadbalancer
+  hosts: nginx_hosts
+  gather_facts: false
+  become: yes
+  roles:
+  - loadbalancer
