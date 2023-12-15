@@ -1,20 +1,14 @@
-- name: Import Nginx repo KEY
-  ansible.builtin.rpm_key:
-    state: present
-    key: https://nginx.org/keys/nginx_signing.key
-
 - name: Installing Nginx Repository
   ansible.builtin.yum_repository:
-    name: nginx
-    description: Nginx Repository
+    name: nginx-stable
+    description: nginx stable repo
+    file: nginx
     baseurl: http://nginx.org/packages/centos/$releasever/$basearch/
+    gpgkey: https://nginx.org/keys/nginx_signing.key
     gpgcheck: yes
+    enabled: yes
+    module_hotfixes: true
 
-# - name: Install EPEL repo
-#   ansible.builtin.dnf:
-#     name:
-#       - epel-release
-#     state: latest
 - name: install Nginx
   ansible.builtin.dnf:
     name: 
@@ -66,7 +60,7 @@
     insertbefore: BOF
     line: 'user = nginx'
 
-- name: change a str
+- name: change group in /etc/php-fpm.d/www.conf
   ansible.builtin.lineinfile: dest=/etc/php-fpm.d/www.conf
               regexp='^group ='
               insertbefore=BOF
@@ -88,7 +82,7 @@
     - tar -xzf /root/latest.tar.gz
     - mv /home/akopalev/wordpress /var/www/
     - chown -R nginx:nginx /var/www/wordpress
-    - setsebool -P httpd_can_network_connect 1
+    # - setsebool -P httpd_can_network_connect 1
     - sudo restorecon -Rv /var/www/wordpress
 
 - name: Template a file to /var/www/wordpress/wp-config.php
@@ -98,6 +92,26 @@
     owner: nginx
     group: nginx
     mode: '0644'
+
+# - name: Put SELinux in permissive mode, logging actions that would be blocked.
+#   ansible.posix.selinux:
+#     policy: targeted
+#     state: permissive
+
+- name: Install policycoreutils-python-utils
+  ansible.builtin.dnf:
+    name:
+      - policycoreutils-python-utils
+    state: present
+
+- name: Set httpd_can_network_relay flag on and keep it persistent across reboots
+  ansible.posix.seboolean:
+    name: httpd_can_network_connect
+    state: true
+    persistent: true
+
+- name: Allow httpd to read/write directories wordpress
+  ansible.builtin.command: chcon -t httpd_sys_rw_content_t /var/www/wordpress/ -R
 
 - name: Start Nginx Service
   ansible.builtin.systemd:

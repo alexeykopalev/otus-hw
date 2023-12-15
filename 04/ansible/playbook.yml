@@ -11,10 +11,3 @@
   become: yes
   roles:
   - wordpress
-
-- name: install-loadbalancer
-  hosts: nginx_hosts
-  gather_facts: false
-  become: yes
-  roles:
-  - loadbalancer

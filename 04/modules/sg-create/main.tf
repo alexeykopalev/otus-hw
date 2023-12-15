@@ -47,15 +47,36 @@ resource "yandex_vpc_security_group" "internal-sg" {
 
   ingress {
     protocol       = "TCP"
-    description    = "allow 3306"
+    description    = "allow 3306 subnet-1"
     v4_cidr_blocks = ["10.10.1.0/24"]
     port           = 3306
   }
 
   ingress {
     protocol       = "TCP"
+    description    = "allow 3306 subnet-2"
+    v4_cidr_blocks = ["10.10.2.0/24"]
+    port           = 3306
+  }
+
+  ingress {
+    protocol          = "TCP"
+    description       = "balancer"
+    security_group_id = yandex_vpc_security_group.external-sg.id
+    port              = 80
+  }
+
+  ingress {
+    protocol       = "TCP"
     description    = "allow http"
     v4_cidr_blocks = ["10.10.1.0/24"]
+    port           = 80
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "allow http"
+    v4_cidr_blocks = ["10.10.2.0/24"]
     port           = 80
   }
 }
@@ -85,8 +106,22 @@ resource "yandex_vpc_security_group" "external-sg" {
 
   ingress {
     protocol       = "TCP"
-    description    = "allow http"
+    description    = "ext-http"
     v4_cidr_blocks = ["0.0.0.0/0"]
     port           = 80
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "ext-https"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    port           = 443
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "healthchecks"
+    v4_cidr_blocks = ["198.18.235.0/24", "198.18.248.0/24"]
+    port           = 30080
   }
 }

@@ -1,30 +1,49 @@
-- name: Install nginx
-  apt:
-    name:
+- name: Installing Nginx Repository
+  ansible.builtin.yum_repository:
+    name: nginx-stable
+    description: nginx stable repo
+    file: nginx
+    baseurl: http://nginx.org/packages/centos/$releasever/$basearch/
+    gpgkey: https://nginx.org/keys/nginx_signing.key
+    gpgcheck: yes
+    enabled: yes
+    module_hotfixes: true
+
+- name: install Nginx
+  ansible.builtin.dnf:
+    name: 
       - nginx
     state: latest
-    update_cache: yes
 
-- name: Remove file /etc/nginx/sites-available/default
-  ansible.builtin.file:
-    path: /etc/nginx/sites-available/default
-    state: absent
-
-- name: Remove file /etc/nginx/sites-enabled/default
-  ansible.builtin.file:
-    path: /etc/nginx/sites-enabled/default
-    state: absent
-
-- name: Copy file /etc/nginx/sites-available/upstreams
+- name: Copy upstreams conf
   ansible.builtin.copy:
-    src: upstreams
-    dest: /etc/nginx/sites-available/upstreams
+    src: files/upstreams
+    dest: /etc/nginx/conf.d/dip-akopalev.ru.conf
 
-- name: Create a symbolic default link to /etc/nginx/sites-available/upstreams
-  ansible.builtin.file:
-    src: /etc/nginx/sites-available/upstreams
-    dest: /etc/nginx/sites-enabled/upstreams
-    state: link
+- name: Copy proxy_params conf
+  ansible.builtin.copy:
+    src: files/proxy_params
+    dest: /etc/nginx/proxy_params
+
+# - name: Extract wordpress
+#   ansible.builtin.command: setsebool -P httpd_can_network_connect 1
+
+# - name: Put SELinux in permissive mode, logging actions that would be blocked.
+#   ansible.posix.selinux:
+#     policy: targeted
+#     state: permissive
+
+- name: Install policycoreutils-python-utils
+  ansible.builtin.dnf:
+    name:
+      - policycoreutils-python-utils
+    state: present
+
+- name: Set httpd_can_network_relay flag on and keep it persistent across reboots
+  ansible.posix.seboolean:
+    name: httpd_can_network_relay
+    state: true
+    persistent: true
 
 - name: Start Nginx Service
   ansible.builtin.systemd:

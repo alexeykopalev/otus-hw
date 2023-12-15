@@ -4,9 +4,17 @@ resource "yandex_vpc_network" "network-1" {
 
 resource "yandex_vpc_subnet" "subnet-1" {
   name = var.name_subnetwork1
-  zone           = "ru-central1-b"
+  zone           = "ru-central1-a"
   network_id = yandex_vpc_network.network-1.id
   v4_cidr_blocks = [var.sub1_cidr1_v4]
+  route_table_id = yandex_vpc_route_table.rt.id
+}
+
+resource "yandex_vpc_subnet" "subnet-2" {
+  name = var.name_subnetwork2
+  zone           = "ru-central1-b"
+  network_id = yandex_vpc_network.network-1.id
+  v4_cidr_blocks = [var.sub2_cidr1_v4]
   route_table_id = yandex_vpc_route_table.rt.id
 }
 
