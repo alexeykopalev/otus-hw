@@ -33,6 +33,50 @@ module "bast-host" {
   sec-gr = [module.sg-create.sec-bast-sg]
 }
 
+resource "yandex_compute_disk" "iscsi-disk" {
+  name       = "iscsi-disk"
+  type       = "network-hdd"
+  zone       = "ru-central1-a"
+  size       = 15
+}
+
+resource "yandex_compute_instance" "iscsi-srv" {
+
+  name                      = "iscsi-srv"
+  platform_id               = "standard-v1"
+  zone                      = "ru-central1-a"
+  hostname                  = "iscsi-srv" 
+
+  resources {
+    cores  = 2
+    memory = 2
+    core_fraction = 20
+  }
+
+  boot_disk {
+    initialize_params {
+//      image_id = "fd8o41nbel1uqngk0op2"
+      image_id = "fd83rqq627fa1mdphnog"
+      size = 10
+    }
+  }
+
+  secondary_disk {
+    disk_id = yandex_compute_disk.iscsi-disk.id
+  }
+
+  network_interface {
+    subnet_id = module.network-create.subnetwork1_id
+    nat = false
+    ip_address = "10.10.1.3"
+    security_group_ids = [module.sg-create.internal-sg]
+  }
+
+  metadata = {
+    user-data = "${file("./cloud-config")}"
+  }
+}
+
 module "backend1" {
   source = "./modules/vm-create"
   name = "backend1"
@@ -68,25 +112,6 @@ module "backend2" {
   ip = "10.10.2.10"
   sec-gr = [module.sg-create.internal-sg]
 }
-
-# module "nginx" {
-#   source = "./modules/vm-create"
-#   name = "nginx-srv"
-#   platform = "standard-v1"
-#   zone = "ru-central1-a"
-#   hostname = "nginx-srv"
-#   cpu = 2
-#   ram = 2
-#   core_fraction = 20
-#   preemptible = true
-#   disk_size = 10
-#   image_id = "fd81prb1447ilqb2mp3m"
-#   subnetwork_id = module.network-create.subnetwork1_id
-#   nat = true
-#   ip = "10.10.1.3"
-#   nat-ip = "158.160.75.138"
-#   sec-gr = [module.sg-create.internal-sg,module.sg-create.external-sg]
-# }
 
 module "db" {
   source = "./modules/vm-create"

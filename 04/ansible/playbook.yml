@@ -1,13 +1,34 @@
-- name: install-mysql
-  hosts: db_hosts
+- name: install targetcli, create lun
+  hosts: iscsi_srv
   gather_facts: false
   become: yes
   roles:
-  - db
+  - targetcli
 
-- name: install-wordpress
+- name: install iscsi-client
   hosts: backend_hosts
   gather_facts: false
   become: yes
   roles:
-  - wordpress
+  - iscsi-client
+
+- name: install ha-cluster
+  hosts: backend_hosts
+  gather_facts: false
+  become: yes
+  roles:
+  - ha-cluster
+
+# - name: install-mysql
+#   hosts: db_hosts
+#   gather_facts: false
+#   become: yes
+#   roles:
+#   - db
+
+# - name: install-wordpress
+#   hosts: backend_hosts
+#   gather_facts: false
+#   become: yes
+#   roles:
+#   - wordpress
