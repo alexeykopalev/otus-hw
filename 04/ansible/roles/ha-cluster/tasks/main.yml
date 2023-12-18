@@ -170,8 +170,7 @@
 # vgchange --lockstart web_cluster_vg
 - name: start lock manager for shared
   ansible.builtin.command: "vgchange --lockstart cluster_vg"
-  when: "{{ item }}"
-  with_items: 
+  when: 
     - inventory_hostname == play_hosts[1] 
     - vgs_status.rc | int != 0
 
