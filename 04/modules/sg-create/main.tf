@@ -68,78 +68,141 @@ resource "yandex_vpc_security_group" "internal-sg" {
 
   ingress {
     protocol       = "TCP"
-    description    = "allow http"
+    description    = "allow http subnet-1"
     v4_cidr_blocks = ["10.10.1.0/24"]
     port           = 80
   }
 
   ingress {
     protocol       = "TCP"
-    description    = "allow http"
+    description    = "allow http subnet-2"
     v4_cidr_blocks = ["10.10.2.0/24"]
     port           = 80
   }
 
   ingress {
     protocol          = "TCP"
-    description       = "allow iscsi 3620"
+    description       = "allow iscsi 3620 subnet-1"
     v4_cidr_blocks    = ["10.10.1.0/24"]
     port              = 3260
   }
 
-    ingress {
+  ingress {
     protocol          = "TCP"
-    description       = "allow pcsd port"
+    description       = "allow iscsi 3620 subnet-2"
+    v4_cidr_blocks    = ["10.10.2.0/24"]
+    port              = 3260
+  }
+
+  ingress {
+    protocol          = "TCP"
+    description       = "allow pcsd port subnet-1"
     v4_cidr_blocks    = ["10.10.1.0/24"]
     port              = 2224
   }
 
-      ingress {
+  ingress {
     protocol          = "TCP"
-    description       = "allow crmd port"
+    description       = "allow pcsd port subnet-2"
+    v4_cidr_blocks    = ["10.10.2.0/24"]
+    port              = 2224
+  }
+
+  ingress {
+    protocol          = "TCP"
+    description       = "allow crmd port subnet-1"
     v4_cidr_blocks    = ["10.10.1.0/24"]
     port              = 3121
   }
 
   ingress {
     protocol          = "TCP"
-    description       = "allow corosync-qnetd"
+    description       = "allow crmd port subnet-2"
+    v4_cidr_blocks    = ["10.10.2.0/24"]
+    port              = 3121
+  }
+
+  ingress {
+    protocol          = "TCP"
+    description       = "allow corosync-qnetd subnet-1"
     v4_cidr_blocks    = ["10.10.1.0/24"]
     port              = 5403
   }
 
   ingress {
+    protocol          = "TCP"
+    description       = "allow corosync-qnetd subnet-2"
+    v4_cidr_blocks    = ["10.10.2.0/24"]
+    port              = 5403
+  }
+
+  ingress {
     protocol          = "UDP"
-    description       = "allow corosync multicast-udp"
+    description       = "allow corosync multicast-udp subnet-1"
     v4_cidr_blocks    = ["10.10.1.0/24"]
     port              = 5404
   }
 
   ingress {
     protocol          = "UDP"
-    description       = "allow corosync"
+    description       = "allow corosync multicast-udp subnet-2"
+    v4_cidr_blocks    = ["10.10.2.0/24"]
+    port              = 5404
+  }
+
+  ingress {
+    protocol          = "UDP"
+    description       = "allow corosync subnet-1"
     v4_cidr_blocks    = ["10.10.1.0/24"]
     port              = 5405
   }
 
   ingress {
+    protocol          = "UDP"
+    description       = "allow corosync subnet-2"
+    v4_cidr_blocks    = ["10.10.2.0/24"]
+    port              = 5405
+  }
+
+  ingress {
     protocol          = "TCP"
-    description       = "allow CLVM"
+    description       = "allow CLVM subnet-1"
     v4_cidr_blocks    = ["10.10.1.0/24"]
     port              = 21064
   }  
 
   ingress {
     protocol          = "TCP"
-    description       = "allow booth ticket manager"
+    description       = "allow CLVM subnet-2"
+    v4_cidr_blocks    = ["10.10.2.0/24"]
+    port              = 21064
+  }  
+
+  ingress {
+    protocol          = "TCP"
+    description       = "allow booth ticket manager subnet-1"
+    v4_cidr_blocks    = ["10.10.1.0/24"]
+    port              = 9929
+  }
+
+  ingress {
+    protocol          = "TCP"
+    description       = "allow booth ticket manager subnet-2"
+    v4_cidr_blocks    = ["10.10.2.0/24"]
+    port              = 9929
+  }
+
+  ingress {
+    protocol          = "UDP"
+    description       = "allow booth ticket manager subnet-1"
     v4_cidr_blocks    = ["10.10.1.0/24"]
     port              = 9929
   }
 
   ingress {
     protocol          = "UDP"
-    description       = "allow booth ticket manager"
-    v4_cidr_blocks    = ["10.10.1.0/24"]
+    description       = "allow booth ticket manager subnet-2"
+    v4_cidr_blocks    = ["10.10.2.0/24"]
     port              = 9929
   }
 }

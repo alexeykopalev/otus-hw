@@ -1,3 +1,12 @@
+---
+- name: Install Chrony
+  hosts: all
+  gather_facts: false
+  become: true
+  #serial: 5
+  roles:
+    - chrony
+
 - name: install targetcli, create lun
   hosts: iscsi_srv
   gather_facts: false
@@ -19,16 +28,16 @@
   roles:
   - ha-cluster
 
-# - name: install-mysql
-#   hosts: db_hosts
-#   gather_facts: false
-#   become: yes
-#   roles:
-#   - db
+- name: install-mysql
+  hosts: db_hosts
+  gather_facts: false
+  become: yes
+  roles:
+  - db
 
-# - name: install-wordpress
-#   hosts: backend_hosts
-#   gather_facts: false
-#   become: yes
-#   roles:
-#   - wordpress
+- name: install-wordpress
+  hosts: backend_hosts
+  gather_facts: false
+  become: yes
+  roles:
+  - wordpress

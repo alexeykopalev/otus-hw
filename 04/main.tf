@@ -23,6 +23,7 @@ module "bast-host" {
   platform = "standard-v1"
   zone = "ru-central1-b"
   hostname = "bast-host-srv"
+  image_id = "fd81prb1447ilqb2mp3m" //AlmaLinux
   cpu = 2
   ram = 2
   core_fraction = 20
@@ -50,13 +51,13 @@ resource "yandex_compute_instance" "iscsi-srv" {
   resources {
     cores  = 2
     memory = 2
-    core_fraction = 20
+    core_fraction = 100
   }
 
   boot_disk {
     initialize_params {
-//      image_id = "fd8o41nbel1uqngk0op2"
-      image_id = "fd83rqq627fa1mdphnog"
+      image_id = "fd81prb1447ilqb2mp3m" // AlmaLinux 8
+      #image_id = "fd83rqq627fa1mdphnog" // CentOs 7
       size = 10
     }
   }
@@ -85,7 +86,7 @@ module "backend1" {
   hostname = "backend1"
   cpu = 2
   ram = 2
-  core_fraction = 5
+  core_fraction = 100
   preemptible = true
   image_id = "fd81prb1447ilqb2mp3m"
   disk_size = 10
@@ -103,7 +104,7 @@ module "backend2" {
   hostname = "backend2"
   cpu = 2
   ram = 2
-  core_fraction = 5
+  core_fraction = 100
   preemptible = true
   image_id = "fd81prb1447ilqb2mp3m"
   disk_size = 10
@@ -121,7 +122,7 @@ module "db" {
   hostname = "db-srv"
   cpu = 2
   ram = 2
-  core_fraction = 5
+  core_fraction = 20
   preemptible = true
   disk_size = 10
   image_id = "fd81prb1447ilqb2mp3m"
