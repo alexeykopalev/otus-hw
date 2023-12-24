@@ -75,6 +75,7 @@
   ansible.builtin.get_url:
     url: https://ru.wordpress.org/latest-ru_RU.tar.gz
     dest: /root/latest.tar.gz
+  run_once: true
 
 - name: Extract wordpress
   ansible.builtin.command: "{{ item }}"
@@ -82,6 +83,12 @@
     - tar -xzf /root/latest.tar.gz
     - mv /home/akopalev/wordpress /var/www/
     - chown -R nginx:nginx /var/www/wordpress
+  run_once: true
+
+- name: Change permission
+  ansible.builtin.command: "{{ item }}"
+  with_items:
+    # - chown -R nginx:nginx /var/www/wordpress
     # - setsebool -P httpd_can_network_connect 1
     - sudo restorecon -Rv /var/www/wordpress
 
@@ -92,6 +99,7 @@
     owner: nginx
     group: nginx
     mode: '0644'
+  run_once: true
 
 # - name: Put SELinux in permissive mode, logging actions that would be blocked.
 #   ansible.posix.selinux:
@@ -119,7 +127,7 @@
     state: restarted
     enabled: yes
 
-- name: Start Nginx Service
+- name: Start php-fpm Service
   ansible.builtin.systemd:
     name: php-fpm
     state: restarted

@@ -15,9 +15,8 @@
     - targetcli /backstores/block create disk01 /dev/vdb
     - targetcli /iscsi create {{ iqn_server }}
     - targetcli /iscsi/{{ iqn_server }}/tpg1/luns create /backstores/block/disk01 lun=1
-    - targetcli /iscsi/{{ iqn_server }}/tpg1/acls create {{ iqn_pcs1 }}
-    - targetcli /iscsi/{{ iqn_server }}/tpg1/acls create {{ iqn_pcs2 }}
-    - targetcli /iscsi/{{ iqn_server }}/tpg1/acls create {{ iqn_pcs3 }}
+    - targetcli /iscsi/{{ iqn_server }}/tpg1/acls create {{ iqn_backend1 }}
+    - targetcli /iscsi/{{ iqn_server }}/tpg1/acls create {{ iqn_backend2 }}
   when: targetcli_status.rc | int != 0
 
 # - name: This command will change the working directory to somedir/

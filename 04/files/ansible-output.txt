@@ -1,0 +1,337 @@
+[alexey@vivobook-fedora 04]$ ansible-playbook ansible/playbook.yml 
+
+PLAY [Install Chrony] ******************************************************************************************************************************************************************
+
+TASK [chrony : Installing Chrony] ******************************************************************************************************************************************************
+ok: [iscsi-srv]
+ok: [backend2]
+ok: [db-srv]
+ok: [backend1]
+
+TASK [chrony : Start Chronyd Service] **************************************************************************************************************************************************
+ok: [backend1]
+ok: [backend2]
+ok: [iscsi-srv]
+ok: [db-srv]
+
+TASK [chrony : Set timezone to Europe/Moscow] ******************************************************************************************************************************************
+changed: [backend1]
+changed: [iscsi-srv]
+changed: [backend2]
+changed: [db-srv]
+
+RUNNING HANDLER [chrony : Restart Chronyd] *********************************************************************************************************************************************
+changed: [backend1]
+changed: [iscsi-srv]
+changed: [backend2]
+changed: [db-srv]
+
+PLAY [install targetcli, create lun] ***************************************************************************************************************************************************
+
+TASK [targetcli : Install targetcli] ***************************************************************************************************************************************************
+changed: [iscsi-srv]
+
+TASK [targetcli : Gather targetcli status] *********************************************************************************************************************************************
+fatal: [iscsi-srv]: FAILED! => {"changed": true, "cmd": ["targetcli", "/backstores/block/disk01", "info"], "delta": "0:00:00.382883", "end": "2023-12-18 16:04:50.754224", "msg": "non-zero return code", "rc": 1, "start": "2023-12-18 16:04:50.371341", "stderr": "No such path /backstores/block/disk01", "stderr_lines": ["No such path /backstores/block/disk01"], "stdout": "Warning: Could not load preferences file /root/.targetcli/prefs.bin.", "stdout_lines": ["Warning: Could not load preferences file /root/.targetcli/prefs.bin."]}
+...ignoring
+
+TASK [targetcli : Run targetcli configure] *********************************************************************************************************************************************
+changed: [iscsi-srv] => (item=targetcli /backstores/block create disk01 /dev/vdb)
+changed: [iscsi-srv] => (item=targetcli /iscsi create iqn.2023-11.ru.otus:storage.target00)
+changed: [iscsi-srv] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/luns create /backstores/block/disk01 lun=1)
+changed: [iscsi-srv] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:cf70d4c706e)
+changed: [iscsi-srv] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:f5cfb68ca8f)
+
+PLAY [install iscsi-client] ************************************************************************************************************************************************************
+
+TASK [iscsi-client : Install open-iscsi] ***********************************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+TASK [iscsi-client : change InitiatorName backend1] ************************************************************************************************************************************
+skipping: [backend2]
+changed: [backend1]
+
+TASK [iscsi-client : change InitiatorName backend2] ************************************************************************************************************************************
+skipping: [backend1]
+changed: [backend2]
+
+TASK [iscsi-client : iscsi_login] ******************************************************************************************************************************************************
+changed: [backend1] => (item=iscsiadm -m discovery -t st -p 10.10.1.3)
+changed: [backend2] => (item=iscsiadm -m discovery -t st -p 10.10.1.3)
+changed: [backend1] => (item=iscsiadm -m node -l -T iqn.2023-11.ru.otus:storage.target00)
+changed: [backend2] => (item=iscsiadm -m node -l -T iqn.2023-11.ru.otus:storage.target00)
+
+RUNNING HANDLER [iscsi-client : start_iscsi] *******************************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+RUNNING HANDLER [iscsi-client : restart_iscsid] ****************************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+PLAY [install ha-cluster] **************************************************************************************************************************************************************
+
+TASK [ha-cluster : Enable highavailability repository (AlmaLinux)] *********************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+TASK [ha-cluster : Enable resilientstorage repository (AlmaLinux)] *********************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+TASK [ha-cluster : Install the Packages] ***********************************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+TASK [ha-cluster : Add 'use_lvmlockd = 1' to LVM Confifuration File] *******************************************************************************************************************
+changed: [backend1] => (item={'regexp': 'system_id_source =', 'line': "system_id_source = 'uname'"})
+changed: [backend2] => (item={'regexp': 'system_id_source =', 'line': "system_id_source = 'uname'"})
+changed: [backend1] => (item={'regexp': 'use_lvmlockd =', 'line': 'use_lvmlockd = 1'})
+changed: [backend2] => (item={'regexp': 'use_lvmlockd =', 'line': 'use_lvmlockd = 1'})
+changed: [backend1] => (item={'regexp': 'use_devicesfile =', 'line': 'use_devicesfile = 1'})
+changed: [backend2] => (item={'regexp': 'use_devicesfile =', 'line': 'use_devicesfile = 1'})
+
+TASK [ha-cluster : Add2 'locking_type = 1' to LVM Confifuration File] ******************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+TASK [ha-cluster : Start the lvmlockd service] *****************************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+TASK [ha-cluster : Create directories for cluster mount] *******************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+TASK [ha-cluster : Start the pcs service] **********************************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+TASK [ha-cluster : Set the password for the use hacluster] *****************************************************************************************************************************
+[DEPRECATION WARNING]: Encryption using the Python crypt module is deprecated. The Python crypt module is deprecated and will be removed from Python 3.13. Install the passlib library 
+for continued encryption functionality. This feature will be removed in version 2.17. Deprecation warnings can be disabled by setting deprecation_warnings=False in ansible.cfg.
+[DEPRECATION WARNING]: Encryption using the Python crypt module is deprecated. The Python crypt module is deprecated and will be removed from Python 3.13. Install the passlib library 
+for continued encryption functionality. This feature will be removed in version 2.17. Deprecation warnings can be disabled by setting deprecation_warnings=False in ansible.cfg.
+changed: [backend1]
+changed: [backend2]
+
+TASK [ha-cluster : Gather cluster status] **********************************************************************************************************************************************
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": ["pcs", "cluster", "status"], "delta": "0:00:00.778703", "end": "2023-12-18 16:06:42.655832", "msg": "non-zero return code", "rc": 1, "start": "2023-12-18 16:06:41.877129", "stderr": "Error: cluster is not currently running on this node", "stderr_lines": ["Error: cluster is not currently running on this node"], "stdout": "", "stdout_lines": []}
+...ignoring
+fatal: [backend2]: FAILED! => {"changed": true, "cmd": ["pcs", "cluster", "status"], "delta": "0:00:00.813427", "end": "2023-12-18 16:06:42.758909", "msg": "non-zero return code", "rc": 1, "start": "2023-12-18 16:06:41.945482", "stderr": "Error: cluster is not currently running on this node", "stderr_lines": ["Error: cluster is not currently running on this node"], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [ha-cluster : Authenticate the cluster] *******************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Setup the HA-Cluster] ***********************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Start the HA-Cluster] ***********************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Enable the HA-Cluster] **********************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Setting stonith-enabled=false] **************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Setting 'No Quorum' Policy] *****************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Gather dlm resource status] *****************************************************************************************************************************************
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "dlm-clone"], "delta": "0:00:00.772203", "end": "2023-12-18 16:07:08.779890", "msg": "non-zero return code", "rc": 1, "start": "2023-12-18 16:07:08.007687", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'dlm-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'dlm-clone'"]}
+...ignoring
+fatal: [backend2]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "dlm-clone"], "delta": "0:00:00.803489", "end": "2023-12-18 16:07:08.898807", "msg": "non-zero return code", "rc": 1, "start": "2023-12-18 16:07:08.095318", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'dlm-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'dlm-clone'"]}
+...ignoring
+
+TASK [ha-cluster : Creating 'dlm' Resource] ********************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Gather lvmlockd resource status] ************************************************************************************************************************************
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "lvmlockd-clone"], "delta": "0:00:00.749250", "end": "2023-12-18 16:07:13.167138", "msg": "non-zero return code", "rc": 1, "start": "2023-12-18 16:07:12.417888", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'lvmlockd-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'lvmlockd-clone'"]}
+...ignoring
+fatal: [backend2]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "lvmlockd-clone"], "delta": "0:00:00.792513", "end": "2023-12-18 16:07:13.248765", "msg": "non-zero return code", "rc": 1, "start": "2023-12-18 16:07:12.456252", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'lvmlockd-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'lvmlockd-clone'"]}
+...ignoring
+
+TASK [ha-cluster : Creating lvmlockd Resource] *****************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Creating First Constraint] ******************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Pause] **************************************************************************************************************************************************************
+Pausing for 10 seconds
+(ctrl+C then 'C' = continue early, ctrl+C then 'A' = abort)
+ok: [backend1]
+
+TASK [ha-cluster : Gather pvs /dev/sda] ************************************************************************************************************************************************
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": "pvs | grep /dev/sda", "delta": "0:00:01.107306", "end": "2023-12-18 16:07:30.266065", "msg": "non-zero return code", "rc": 1, "start": "2023-12-18 16:07:29.158759", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [ha-cluster : Creating Physical Volume] *******************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Gather vgs /dev/sda] ************************************************************************************************************************************************
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": "vgs | grep cluster_vg", "delta": "0:00:00.038037", "end": "2023-12-18 16:07:33.169494", "msg": "non-zero return code", "rc": 1, "start": "2023-12-18 16:07:33.131457", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [ha-cluster : Creating Volume Group] **********************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : start lock manager for shared] **************************************************************************************************************************************
+skipping: [backend1]
+changed: [backend2]
+
+TASK [ha-cluster : Pause] **************************************************************************************************************************************************************
+Pausing for 10 seconds
+(ctrl+C then 'C' = continue early, ctrl+C then 'A' = abort)
+ok: [backend1]
+
+TASK [ha-cluster : Gather lvs | grep cluster_lv] ***************************************************************************************************************************************
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": "lvs | grep cluster_lv", "delta": "0:00:00.040932", "end": "2023-12-18 16:07:52.290480", "msg": "non-zero return code", "rc": 1, "start": "2023-12-18 16:07:52.249548", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [ha-cluster : Creating Logical Volume] ********************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Formatting Logical Volume With GFS2] ********************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Gather cluster_vg-clone resource status] ****************************************************************************************************************************
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "cluster_vg-clone"], "delta": "0:00:00.774662", "end": "2023-12-18 16:07:59.877940", "msg": "non-zero return code", "rc": 1, "start": "2023-12-18 16:07:59.103278", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'cluster_vg-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'cluster_vg-clone'"]}
+...ignoring
+fatal: [backend2]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "cluster_vg-clone"], "delta": "0:00:00.781729", "end": "2023-12-18 16:07:59.909518", "msg": "non-zero return code", "rc": 1, "start": "2023-12-18 16:07:59.127789", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'cluster_vg-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'cluster_vg-clone'"]}
+...ignoring
+
+TASK [ha-cluster : create LVM-activate resource] ***************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : set start order as [locking] → [shared_vg]] *************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : set that [shared_vg] and [locking] start on a same node] ************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Gather clusterfs-clone resource status] *****************************************************************************************************************************
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "clusterfs-clone"], "delta": "0:00:00.763709", "end": "2023-12-18 16:08:08.643009", "msg": "non-zero return code", "rc": 1, "start": "2023-12-18 16:08:07.879300", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'clusterfs-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'clusterfs-clone'"]}
+...ignoring
+fatal: [backend2]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "clusterfs-clone"], "delta": "0:00:00.795159", "end": "2023-12-18 16:08:08.713443", "msg": "non-zero return code", "rc": 1, "start": "2023-12-18 16:08:07.918284", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'clusterfs-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'clusterfs-clone'"]}
+...ignoring
+
+TASK [ha-cluster : Creating Cluster File System] ***************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : set start order as [shared_vg] → [shared_fs]] ***********************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : set that [shared_fs] and [shared_vg] start on a same node] **********************************************************************************************************
+changed: [backend1]
+
+PLAY [install-mysql] *******************************************************************************************************************************************************************
+
+TASK [db : Install mysql-server package] ***********************************************************************************************************************************************
+changed: [db-srv]
+
+TASK [db : Save root password in .my.cnf] **********************************************************************************************************************************************
+changed: [db-srv]
+
+TASK [db : start and enable mysql service] *********************************************************************************************************************************************
+changed: [db-srv]
+
+TASK [db : Sets the root password] *****************************************************************************************************************************************************
+changed: [db-srv]
+
+TASK [db : Save root password in .my.cnf] **********************************************************************************************************************************************
+changed: [db-srv]
+
+TASK [db : creating wp_db] *************************************************************************************************************************************************************
+changed: [db-srv]
+
+TASK [db : creating mysql user (medium_post)] ******************************************************************************************************************************************
+changed: [db-srv]
+
+TASK [db : Restart mysql] **************************************************************************************************************************************************************
+changed: [db-srv]
+
+PLAY [install-wordpress] ***************************************************************************************************************************************************************
+
+TASK [wordpress : Installing Nginx Repository] *****************************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+TASK [wordpress : install Nginx] *******************************************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+TASK [wordpress : Import Remi KEY] *****************************************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+TASK [wordpress : Installing Remi Repository] ******************************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+TASK [wordpress : Enable PHP Remi Repository] ******************************************************************************************************************************************
+changed: [backend1] => (item=dnf module reset php -y)
+changed: [backend2] => (item=dnf module reset php -y)
+changed: [backend1] => (item=dnf module enable php:remi-8.2 -y)
+changed: [backend2] => (item=dnf module enable php:remi-8.2 -y)
+
+TASK [wordpress : Install php-fpm and PHP extensions] **********************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+TASK [wordpress : change user in /etc/php-fpm.d/www.conf] ******************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+TASK [wordpress : change group in /etc/php-fpm.d/www.conf] *****************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+TASK [wordpress : Copy wordpress conf] *************************************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+TASK [wordpress : Download wordpress] **************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [wordpress : Extract wordpress] ***************************************************************************************************************************************************
+changed: [backend1] => (item=tar -xzf /root/latest.tar.gz)
+changed: [backend1] => (item=mv /home/akopalev/wordpress /var/www/)
+changed: [backend1] => (item=chown -R nginx:nginx /var/www/wordpress)
+
+TASK [wordpress : Change permission] ***************************************************************************************************************************************************
+changed: [backend1] => (item=sudo restorecon -Rv /var/www/wordpress)
+changed: [backend2] => (item=sudo restorecon -Rv /var/www/wordpress)
+
+TASK [wordpress : Template a file to /var/www/wordpress/wp-config.php] *****************************************************************************************************************
+changed: [backend1]
+
+TASK [wordpress : Install policycoreutils-python-utils] ********************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+TASK [wordpress : Set httpd_can_network_relay flag on and keep it persistent across reboots] *******************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+TASK [wordpress : Allow httpd to read/write directories wordpress] *********************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+TASK [wordpress : Start Nginx Service] *************************************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+
+TASK [wordpress : Start php-fpm Service] ***********************************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+
+PLAY RECAP *****************************************************************************************************************************************************************************
+backend1                   : ok=65   changed=61   unreachable=0    failed=0    skipped=2    rescued=0    ignored=8   
+backend2                   : ok=39   changed=37   unreachable=0    failed=0    skipped=1    rescued=0    ignored=5   
+db-srv                     : ok=12   changed=10   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+iscsi-srv                  : ok=7    changed=5    unreachable=0    failed=0    skipped=0    rescued=0    ignored=1  

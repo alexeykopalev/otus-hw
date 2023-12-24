@@ -1,0 +1,5 @@
+- name: Restart Chronyd
+  ansible.builtin.service:
+    name: chronyd
+    state: restarted
+    daemon_reload: yes

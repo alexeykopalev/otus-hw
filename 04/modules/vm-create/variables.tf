@@ -39,11 +39,6 @@ variable "disk_size"{
   default = 10
 }
 
-#  variable "sec_disk_id" {
-#    description = "Second disk"
-#    default = ""
-#  }
-
 variable "preemptible" {
   description = "Признак прерываемости VM"
   type = bool
