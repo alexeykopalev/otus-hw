@@ -1,0 +1,12 @@
+# handlers file for roles/iscsi-client
+
+- name: start_iscsi
+  systemd_service:
+    name: iscsi
+    state: started
+    enabled: yes
+
+- name: restart_iscsid
+  systemd_service:
+    name: iscsid
+    state: restarted
