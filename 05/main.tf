@@ -26,6 +26,7 @@ module "bast-host" {
   hostname = "bast-host-srv"
   cpu = 2
   ram = 2
+  sec_disk_id = {}
   core_fraction = 20
   subnetwork_id = module.network-create.subnetbast_id
   nat = true
@@ -35,103 +36,82 @@ module "bast-host" {
 }
 
 resource "yandex_compute_disk" "iscsi-disk" {
-  name       = "iscsi-disk"
+  count     = 1
+  name       = "iscsi-disk-01"
   type       = "network-hdd"
   zone       = "ru-central1-a"
   size       = 15
 }
 
-# module "iscsi-srv" {
-#   source = "./modules/vm-create"
-#   name = "iscsi-srv"
-#   platform = "standard-v1"
-#   zone = "ru-central1-a"
-#   hostname = "iscsi-srv"
-#   cpu = 2
-#   ram = 2
-#   core_fraction = 20
-#   preemptible = true
-#   image_id = "fd81prb1447ilqb2mp3m"
-#   disk_size = 10
-#   sec_disk_id = yandex_compute_disk.iscsi-disk.id
-#   subnetwork_id = module.network-create.subnetwork1_id
-#   nat = false
-#   ip = "10.10.1.3"
-#   sec-gr = [module.sg-create.internal-sg]
-# }
+module "iscsi-srv" {
+  source = "./modules/vm-create"
+  name = "iscsi-srv"
+  platform = "standard-v1"
+  zone = "ru-central1-a"
+  hostname = "iscsi-srv"
+  cpu = 2
+  ram = 2
+  core_fraction = 20
+  image_id = "fd81prb1447ilqb2mp3m"
+  disk_size = 10
 
-resource "yandex_compute_instance" "iscsi-srv" {
-
-  name                      = "iscsi-srv"
-  platform_id               = "standard-v1"
-  zone                      = "ru-central1-a"
-  hostname                  = "iscsi-srv" 
-
-  resources {
-    cores  = 2
-    memory = 2
-    core_fraction = 20
-  }
-
-  boot_disk {
-    initialize_params {
-//      image_id = "fd8o41nbel1uqngk0op2"
-      image_id = "fd83rqq627fa1mdphnog"
-      size = 10
+  sec_disk_id = {
+    for disk in yandex_compute_disk.iscsi-disk :
+    disk.name => {
+      disk_id = disk.id
     }
+    if disk.name == "iscsi-disk-01"
   }
 
-  secondary_disk {
-    disk_id = yandex_compute_disk.iscsi-disk.id
-  }
-
-  network_interface {
-    subnet_id = module.network-create.subnetwork1_id
-    nat = false
-    ip_address = "10.10.1.3"
-    security_group_ids = [module.sg-create.internal-sg]
-  }
-
-  metadata = {
-    user-data = "${file("./cloud-config")}"
-  }
+  subnetwork_id = module.network-create.subnetwork1_id
+  nat = false
+  ip = "10.10.1.3"
+  sec-gr = [module.sg-create.internal-sg]
 }
 
-# module "backend1" {
-#   source = "./modules/vm-create"
-#   name = "backend1"
-#   platform = "standard-v1"
-#   zone = "ru-central1-a"
-#   hostname = "backend1"
-#   cpu = 2
-#   ram = 2
-#   core_fraction = 5
-#   preemptible = true
-#   image_id = "fd81prb1447ilqb2mp3m"
-#   disk_size = 10
-#   subnetwork_id = module.network-create.subnetwork1_id
-#   nat = false
-#   ip = "10.10.1.10"
-#   sec-gr = [module.sg-create.internal-sg]
-# }
+locals {
+  backend_vms = [
+    {
+      name       = "backend1"
+      zone       = "ru-central1-a"
+      subnetwork_id = "${module.network-create.subnetwork1_id}"
+      ip_address = "10.10.1.10"
+    },
+    {
+      name       = "backend2"
+      zone       = "ru-central1-b"
+      subnetwork_id = "${module.network-create.subnetwork2_id}"
+      ip_address = "10.10.2.10"
+    },
+    {
+      name       = "backend3"
+      zone       = "ru-central1-c"
+      subnetwork_id = "${module.network-create.subnetwork3_id}"
+      ip_address = "10.10.3.10"
+    }
+  ]
+}
 
-# module "backend2" {
-#   source = "./modules/vm-create"
-#   name = "backend2"
-#   platform = "standard-v1"
-#   zone = "ru-central1-b"
-#   hostname = "backend2"
-#   cpu = 2
-#   ram = 2
-#   core_fraction = 5
-#   preemptible = true
-#   image_id = "fd81prb1447ilqb2mp3m"
-#   disk_size = 10
-#   subnetwork_id = module.network-create.subnetwork2_id
-#   nat = false
-#   ip = "10.10.2.10"
-#   sec-gr = [module.sg-create.internal-sg]
-# }
+module "backends" {
+  for_each   = {for index, vm in local.backend_vms:
+    vm.name => vm
+  }
+  source = "./modules/vm-create"
+  name = each.value.name
+  platform = "standard-v1"
+  zone = each.value.zone
+  hostname = each.value.name
+  cpu = 2
+  ram = 2
+  core_fraction = 5
+  preemptible = true
+  image_id = "fd81prb1447ilqb2mp3m"
+  disk_size = 10
+  subnetwork_id = each.value.subnetwork_id
+  nat = false
+  ip = each.value.ip_address
+  sec-gr = [module.sg-create.internal-sg]
+}
 
 locals {
   db_vms = [
@@ -171,6 +151,7 @@ module "db-servers" {
   preemptible = true
   disk_size = 10
   image_id = "fd81prb1447ilqb2mp3m"
+  sec_disk_id = {}
   subnetwork_id = each.value.subnetwork_id
   nat = false
   ip = each.value.ip_address

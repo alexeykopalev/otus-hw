@@ -24,6 +24,14 @@ resource "yandex_compute_instance" "vm" {
   # secondary_disk {
   #   disk_id = var.sec_disk_id
   # }
+  dynamic "secondary_disk" {
+    for_each = var.sec_disk_id
+    content {
+      disk_id     = lookup(secondary_disk.value, "disk_id")
+      auto_delete = lookup(secondary_disk.value, "auto_delete", true)
+      mode        = lookup(secondary_disk.value, "mode", "READ_WRITE")
+    }
+  }
 
   network_interface {
     subnet_id = var.subnetwork_id

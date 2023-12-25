@@ -39,11 +39,11 @@ variable "disk_size"{
   default = 10
 }
 
-# variable "sec_disk_id" {
-#    description = "Second disk"
-#    type = string
-#    default = null
-#  }
+variable "sec_disk_id" {
+   description = "Second disk"
+   type = map(map(string))
+   default = {}
+ }
 
 variable "preemptible" {
   description = "Признак прерываемости VM"
