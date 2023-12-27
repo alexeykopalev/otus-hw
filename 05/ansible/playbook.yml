@@ -19,16 +19,23 @@
   roles:
   - ha-cluster
 
-# - name: install-mysql
-#   hosts: db_hosts
-#   gather_facts: false
-#   become: yes
-#   roles:
-#   - db
+- name: install-mysql
+  hosts: db_hosts
+  #gather_facts: false
+  become: yes
+  roles:
+  - db
 
-# - name: install-wordpress
-#   hosts: backend_hosts
-#   gather_facts: false
-#   become: yes
-#   roles:
-#   - wordpress
+- name: install-proxysql
+  hosts: proxysql_srvs
+  #gather_facts: false
+  become: yes
+  roles:
+  - proxysql
+
+- name: install-wordpress
+  hosts: backend_hosts
+  gather_facts: false
+  become: yes
+  roles:
+  - wordpress

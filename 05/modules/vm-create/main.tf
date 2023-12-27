@@ -3,6 +3,7 @@ resource "yandex_compute_instance" "vm" {
   platform_id = var.platform
   zone = var.zone
   hostname = var.hostname
+  allow_stopping_for_update = var.stop_for_update
 
   scheduling_policy {
    preemptible = var.preemptible
@@ -21,9 +22,6 @@ resource "yandex_compute_instance" "vm" {
     }
   }
 
-  # secondary_disk {
-  #   disk_id = var.sec_disk_id
-  # }
   dynamic "secondary_disk" {
     for_each = var.sec_disk_id
     content {
@@ -44,4 +42,5 @@ resource "yandex_compute_instance" "vm" {
   metadata = {
     user-data = file("${path.module}/cloud-config")
   }
+
 }

@@ -5,13 +5,16 @@
 #       - python3-PyMySQL
 #       - mysql
 
+- name: Put SELinux in permissive mode, logging actions that would be blocked.
+  ansible.posix.selinux:
+    policy: targeted
+    state: permissive
+
 - name: install percona key
   ansible.builtin.rpm_key:
     key: https://www.percona.com/downloads/RPM-GPG-KEY-percona
     state: present
 
-# wget https://repo.percona.com/yum/percona-release-latest.noarch.rpm
-# rpm -i percona-release-latest.noarch.rpm
 - name: Install percona repo
   ansible.builtin.package:
     name: 'https://repo.percona.com/yum/percona-release-latest.noarch.rpm'
@@ -48,14 +51,23 @@
 #    var: temp_mysql_root_password.stdout
 
 - ansible.builtin.debug: 
-  msg: "{{ temp_mysql_root_password.stdout }}"
+    msg: "{{ temp_mysql_root_password.stdout }}"
 
-- name: Save root password in .my.cnf
-  template:
-    src: root-my_empty.cnf.j2
-    dest: /root/.my.cnf
-    owner: root
+- name: Create .my.cnf file for root user
+  ansible.builtin.copy:
+    dest: "/root/.my.cnf"
     mode: '0600'
+    content: |
+      [client]
+      user={{ mysql_root_user | quote }}
+      password={{ temp_mysql_root_password.stdout | quote }}
+
+# - name: Save root password in .my.cnf
+#   template:
+#     src: root-my_empty.cnf.j2
+#     dest: /root/.my.cnf
+#     owner: root
+#     mode: '0600'
 
 - name: start and enable mysql service
   service:
@@ -63,13 +75,10 @@
     state: started
     enabled: yes
 
-- name: Sets the root password
-  mysql_user:
-    # login_user: root
-    # login_password: ""
-    name: "{{ mysql_root_user }}"
-    password: "{{ mysql_root_password }}"
-    # login_unix_socket: /var/run/mysqld/mysqld.sock
+- name: Set new root password
+  ansible.builtin.shell: mysql --connect-expired-password -e "ALTER USER '{{ mysql_root_user }}'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_root_password }}';"
+  changed_when: false
+  failed_when: false
 
 - name: Save root password in .my.cnf
   template:
@@ -78,30 +87,138 @@
     owner: root
     mode: '0600'
 
-- name: creating wp_db
-  mysql_db:
-    name: "{{db_name}}"
-    login_host: "localhost"
-    login_user: "{{ mysql_root_user }}"
-    login_password: "{{ mysql_root_password }}"
+- name: Stop Percona service
+  ansible.builtin.service:
+    name: mysql
+    state: stopped
+
+- name: Configure /etc/my.cnf.
+  ansible.builtin.lineinfile:
+    path: /etc/my.cnf
     state: present
+    regexp: "{{ item.key }}"
+    line: "{{ item.value }}"
+  with_items: 
+    - { key: '^wsrep_provider=', value: 'wsrep_provider=/usr/lib64/galera4/libgalera_smm.so' }
+    - { key: '^wsrep_cluster_name=', value: 'wsrep_cluster_name=pxc-cluster' }
+    - { key: '^wsrep_cluster_address=gcomm://', value: 'wsrep_cluster_address=gcomm://10.10.1.4,10.10.2.4,10.10.3.4' }
+    - { key: '^wsrep_node_name=', value: 'wsrep_node_name={{ ansible_hostname }}' }
+    - { key: 'wsrep_node_address=', value: 'wsrep_node_address={{ ansible_host }}' }
 
-- name: creating mysql user (medium_post)
-  mysql_user:
-    name: "{{db_user}}"
-    password: "{{db_pass}}"
-    priv: 'wp_db.*:ALL'
-    host: '%'
-    state: present
+- name: Template config file ssl.cnf to /etc/my.cnf.d/
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/etc/my.cnf.d/{{ item }}"
+  with_items: 
+    - ssl.cnf
 
-# - name: Enable remote login to mysql
-#   lineinfile:
-#     path: /etc/mysql/mysql.conf.d/mysqld.cnf
-#     regexp: '^bind-address'
-#     line: 'bind-address = 0.0.0.0'
-#     backup: yes
+- name: Copy mysql certificates from /var/lib/mysql to /tmp
+  ansible.builtin.fetch:
+    src: "/var/lib/mysql/{{ item }}"
+    dest: /tmp/fetched
+  with_items: 
+   - server-key.pem
+   - server-cert.pem
+   - ca.pem
+  when: "ansible_hostname in 'db-srv1'"
 
-- name: Restart mysql
-  service:
-    name: mysqld
-    state: restarted
+- name: Copy mysql certificates from /tmp to /var/lib/mysql
+  ansible.builtin.copy:
+    src: "/tmp/fetched/db-srv1/var/lib/mysql/{{ item }}"
+    dest: "/var/lib/mysql/{{ item }}"
+  with_items: 
+   - server-key.pem
+   - server-cert.pem
+   - ca.pem
+  when: "ansible_hostname not in 'db-srv1'"
+
+# systemctl start mysql@bootstrap.service
+- name: Start mysql@bootstrap service in first db-server
+  ansible.builtin.service:
+    name: mysql@bootstrap
+    state: started
+  when: "ansible_hostname in 'db-srv1'"
+
+# systemctl start mysql.service
+- name: Start mysql service in other db-servers
+  ansible.builtin.service:
+    name: mysql
+    state: started
+    enabled: true
+  when: "ansible_hostname not in 'db-srv1'"
+
+- name: Add database
+  block:
+
+  # systemctl stop mysql@bootstrap.service
+  - name: Stop mysql@bootstrap service in first db-server
+    ansible.builtin.service:
+      name: mysql@bootstrap
+      state: stopped
+
+  # systemctl start mysql.service
+  - name: Start mysql service in first db-server
+    ansible.builtin.service:
+      name: mysql
+      state: started
+      enabled: true
+
+- name: Add database
+  block:
+
+  - name: Stop mysql@bootstrap service in first db-server
+    ansible.builtin.service:
+      name: mysql@bootstrap
+      state: stopped
+
+  - name: Start mysql service in first db-server
+    ansible.builtin.service:
+      name: mysql
+      state: started
+      enabled: true
+
+  - name: creating wp_db
+    community.mysql.mysql_db:
+      name: "{{db_name}}"
+      login_host: "localhost"
+      login_user: "{{ mysql_root_user }}"
+      login_password: "{{ mysql_root_password }}"
+      state: present
+
+  - name: creating mysql user for wordpress for XtraDB Cluster 
+    community.mysql.mysql_user:
+      name: "{{db_user}}"
+      password: "{{db_pass}}"
+      priv: 'wp_db.*:ALL'
+      host: '%'
+      state: present
+
+  - name: creating wp user for wordpress for proxysql
+    community.mysql.mysql_user:
+      name: "{{db_user}}"
+      password: "{{db_pass}}"
+      priv: '*.*:ALL'
+      host: '%'
+      state: present
+
+  - name: Create Application user database for proxysql
+    community.mysql.mysql_user: 
+      name: "{{ proxysql_user }}"
+      password: "{{ proxysql_password }}"
+      priv: "*.*:USAGE"
+      host: "%"
+      state: present
+      login_user: "{{ mysql_root_user }}"
+      login_password: "{{ mysql_root_password }}"
+
+  - name: Create Application user database for proxysql
+    community.mysql.mysql_user: 
+      name: "{{ sbuser }}"
+      password: "{{ sbuser_password }}"
+      priv: "*.*:ALL"
+      host: "10.10.1.5"
+      state: present
+      login_user: "{{ mysql_root_user }}"
+      login_password: "{{ mysql_root_password }}"
+
+  when: "ansible_hostname in 'db-srv1'"

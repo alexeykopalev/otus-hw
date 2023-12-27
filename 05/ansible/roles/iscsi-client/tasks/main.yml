@@ -16,15 +16,12 @@
   when:
     inventory_hostname == play_hosts[1]
   notify: restart_iscsid
-# - name: echo
-#   debug: 
-#     msg: "Host: {{ inventory_hostname }}"
-#   with_inventory_hostnames: pcs_hosts
-
-# - name: restart_iscsid
-#   systemd_service:
-#     name: iscsid
-#     state: restarted
+- name: change InitiatorName pcs3
+  shell: 
+    echo '{{ iqn_backend3 }}' > /etc/iscsi/initiatorname.iscsi
+  when:
+    inventory_hostname == play_hosts[2]
+  notify: restart_iscsid
 
 - name: iscsi_login
   ansible.builtin.command: "{{ item }}"

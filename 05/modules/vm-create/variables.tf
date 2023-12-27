@@ -77,3 +77,8 @@ variable "nat-ip" {
 variable "sec-gr" {
   description = "Группа безопасности VM"
 }
+
+variable "stop_for_update" {
+  description = "Разрешить остановку для обновления"
+  default = true
+}

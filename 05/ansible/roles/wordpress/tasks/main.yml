@@ -1,3 +1,8 @@
+- name: Put SELinux in permissive mode, logging actions that would be blocked.
+  ansible.posix.selinux:
+    policy: targeted
+    state: permissive
+
 - name: Installing Nginx Repository
   ansible.builtin.yum_repository:
     name: nginx-stable
@@ -62,9 +67,9 @@
 
 - name: change group in /etc/php-fpm.d/www.conf
   ansible.builtin.lineinfile: dest=/etc/php-fpm.d/www.conf
-              regexp='^group ='
-              insertbefore=BOF
-              line='group = nginx'
+    regexp='^group ='
+    insertbefore=BOF
+    line='group = nginx'
 
 - name: Copy wordpress conf
   ansible.builtin.copy:
@@ -75,6 +80,7 @@
   ansible.builtin.get_url:
     url: https://ru.wordpress.org/latest-ru_RU.tar.gz
     dest: /root/latest.tar.gz
+  run_once: true
 
 - name: Extract wordpress
   ansible.builtin.command: "{{ item }}"
@@ -82,8 +88,14 @@
     - tar -xzf /root/latest.tar.gz
     - mv /home/akopalev/wordpress /var/www/
     - chown -R nginx:nginx /var/www/wordpress
-    # - setsebool -P httpd_can_network_connect 1
-    - sudo restorecon -Rv /var/www/wordpress
+  run_once: true
+
+# - name: Change permission
+#   ansible.builtin.command: "{{ item }}"
+#   with_items:
+#     # - chown -R nginx:nginx /var/www/wordpress
+#     # - setsebool -P httpd_can_network_connect 1
+#     - sudo restorecon -Rv /var/www/wordpress
 
 - name: Template a file to /var/www/wordpress/wp-config.php
   ansible.builtin.template:
@@ -92,26 +104,22 @@
     owner: nginx
     group: nginx
     mode: '0644'
+  run_once: true
 
-# - name: Put SELinux in permissive mode, logging actions that would be blocked.
-#   ansible.posix.selinux:
-#     policy: targeted
-#     state: permissive
+# - name: Install policycoreutils-python-utils
+#   ansible.builtin.dnf:
+#     name:
+#       - policycoreutils-python-utils
+#     state: present
 
-- name: Install policycoreutils-python-utils
-  ansible.builtin.dnf:
-    name:
-      - policycoreutils-python-utils
-    state: present
+# - name: Set httpd_can_network_relay flag on and keep it persistent across reboots
+#   ansible.posix.seboolean:
+#     name: httpd_can_network_connect
+#     state: true
+#     persistent: true
 
-- name: Set httpd_can_network_relay flag on and keep it persistent across reboots
-  ansible.posix.seboolean:
-    name: httpd_can_network_connect
-    state: true
-    persistent: true
-
-- name: Allow httpd to read/write directories wordpress
-  ansible.builtin.command: chcon -t httpd_sys_rw_content_t /var/www/wordpress/ -R
+# - name: Allow httpd to read/write directories wordpress
+#   ansible.builtin.command: chcon -t httpd_sys_rw_content_t /var/www/wordpress/ -R
 
 - name: Start Nginx Service
   ansible.builtin.systemd:
@@ -119,7 +127,7 @@
     state: restarted
     enabled: yes
 
-- name: Start Nginx Service
+- name: Start php-fpm Service
   ansible.builtin.systemd:
     name: php-fpm
     state: restarted

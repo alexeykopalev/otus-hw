@@ -1,0 +1,82 @@
+- name: Put SELinux in permissive mode, logging actions that would be blocked.
+  ansible.posix.selinux:
+    policy: targeted
+    state: permissive
+
+- name: install percona key
+  ansible.builtin.rpm_key:
+    key: https://www.percona.com/downloads/RPM-GPG-KEY-percona
+    state: present
+
+- name: Install percona repo
+  ansible.builtin.package:
+    name: 'https://repo.percona.com/yum/percona-release-latest.noarch.rpm'
+    state: present
+    update_cache: true
+
+- name: Update cache
+  ansible.builtin.dnf: 
+    update_cache: yes
+
+- name: percona-release setup pxc-80
+  ansible.builtin.shell: echo 'y' | percona-release setup pxc-80
+
+- name: Install packages
+  ansible.builtin.package:
+    name: 
+      - percona-xtradb-cluster-client
+      - proxysql2
+    state: latest
+
+- name: Restart proxysql service
+  ansible.builtin.service:
+    name: proxysql
+    state: restarted
+
+- name: Insert into mysql_servers (hostgroup_id, hostname, port)
+  ansible.builtin.shell: >
+    mysql -u admin -padmin -h 127.0.0.1 -P 6032 -e "{{ item }}"
+  with_items:
+    - "INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'10.10.1.4',3306);"
+    - "INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'10.10.2.4',3306);"
+    - "INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'10.10.3.4',3306);"
+
+- name: UPDATE global_variables mysql-monitor_username and mysql-monitor_password
+  ansible.builtin.shell: >
+    mysql -u admin -padmin -h 127.0.0.1 -P 6032 -e "{{ item }}"
+  with_items:
+    - "UPDATE global_variables SET variable_value='{{ proxysql_user }}' WHERE variable_name='mysql-monitor_username';"
+    - "UPDATE global_variables SET variable_value='{{ proxysql_password }}' WHERE variable_name='mysql-monitor_password';"
+
+- name: Load and save proxysql config for variables
+  ansible.builtin.shell: >
+    mysql -u admin -padmin -h 127.0.0.1 -P 6032 -e "{{ item }}"
+  with_items:
+    - "LOAD MYSQL VARIABLES TO RUNTIME;"
+    - "SAVE MYSQL VARIABLES TO DISK;"
+
+- name: Load and save proxysql config for variables
+  ansible.builtin.shell: >
+    mysql -u admin -padmin -h 127.0.0.1 -P 6032 -e "{{ item }}"
+  with_items:
+    - "LOAD MYSQL VARIABLES TO RUNTIME;"
+    - "SAVE MYSQL VARIABLES TO DISK;"
+
+- name: Enable monitoring of these nodes, load them at runtime
+  ansible.builtin.shell: >
+    mysql -u admin -padmin -h 127.0.0.1 -P 6032 -e "{{ item }}"
+  with_items:
+    - "LOAD MYSQL SERVERS TO RUNTIME;"
+
+- name: Add user phpadmin to proxysql 
+  ansible.builtin.shell: >
+    mysql -u admin -padmin -h 127.0.0.1 -P 6032 -e "{{ item }}"
+  with_items:
+    - "INSERT INTO mysql_users (username,password) VALUES ('{{ wp_user }}','{{ wp_pass }}');"
+
+- name: Load and save proxysql config for users
+  ansible.builtin.shell: >
+    mysql -u admin -padmin -h 127.0.0.1 -P 6032 -e "{{ item }}"
+  with_items:
+    - "LOAD MYSQL USERS TO RUNTIME;"
+    - "SAVE MYSQL USERS TO DISK;"

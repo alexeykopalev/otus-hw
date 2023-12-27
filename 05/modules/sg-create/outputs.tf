@@ -9,3 +9,11 @@ output internal-sg {
 output external-sg {
   value       = yandex_vpc_security_group.external-sg.id
 }
+
+output db-sg {
+  value       = yandex_vpc_security_group.db-sg.id
+}
+
+output proxysql-sg {
+  value       = yandex_vpc_security_group.proxysql-sg.id
+}
