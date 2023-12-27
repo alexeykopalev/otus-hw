@@ -1,3 +1,11 @@
+---
+- name: Install Chrony
+  hosts: all
+  gather_facts: false
+  become: true
+  roles:
+  - chrony
+
 - name: install targetcli, create lun
   hosts: iscsi_srv
   gather_facts: false
@@ -21,14 +29,13 @@
 
 - name: install-mysql
   hosts: db_hosts
-  #gather_facts: false
   become: yes
   roles:
   - db
 
 - name: install-proxysql
   hosts: proxysql_srvs
-  #gather_facts: false
+  gather_facts: false
   become: yes
   roles:
   - proxysql

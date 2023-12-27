@@ -37,9 +37,9 @@
   ansible.builtin.shell: >
     mysql -u admin -padmin -h 127.0.0.1 -P 6032 -e "{{ item }}"
   with_items:
-    - "INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'10.10.1.4',3306);"
-    - "INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'10.10.2.4',3306);"
-    - "INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'10.10.3.4',3306);"
+    - "INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'{{ db_srv1 }}',3306);"
+    - "INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'{{ db_srv2 }}',3306);"
+    - "INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'{{ db_srv3 }}',3306);"
 
 - name: UPDATE global_variables mysql-monitor_username and mysql-monitor_password
   ansible.builtin.shell: >

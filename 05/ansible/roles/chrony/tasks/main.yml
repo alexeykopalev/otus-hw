@@ -1,0 +1,16 @@
+  - name: Installing Chrony
+    ansible.builtin.dnf:
+      name:
+        - chrony
+      state: present
+
+  - name: Start Chronyd Service
+    ansible.builtin.systemd:
+      name: chronyd
+      state: started
+      enabled: yes
+
+  - name: Set timezone to Europe/Moscow
+    community.general.timezone:
+      name: Europe/Moscow
+    notify: Restart Chronyd
