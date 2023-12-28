@@ -1,0 +1,600 @@
+alexey@home-ub22:~/Otus/otus-hw/05$ ansible-playbook ansible/playbook.yml 
+
+PLAY [Install Chrony] *********************************************************************************************************************************************************************************************************************************************************
+
+TASK [chrony : Installing Chrony] *********************************************************************************************************************************************************************************************************************************************
+ok: [proxysql_srv]
+ok: [db-srv3]
+ok: [iscsi_srv]
+ok: [db-srv1]
+ok: [db-srv2]
+ok: [backend3]
+ok: [backend1]
+ok: [backend2]
+
+TASK [chrony : Start Chronyd Service] *****************************************************************************************************************************************************************************************************************************************
+ok: [db-srv1]
+ok: [db-srv2]
+ok: [proxysql_srv]
+ok: [iscsi_srv]
+ok: [db-srv3]
+ok: [backend2]
+ok: [backend1]
+ok: [backend3]
+
+TASK [chrony : Set timezone to Europe/Moscow] *********************************************************************************************************************************************************************************************************************************
+changed: [proxysql_srv]
+changed: [db-srv3]
+changed: [db-srv1]
+changed: [db-srv2]
+changed: [iscsi_srv]
+changed: [backend2]
+changed: [backend1]
+changed: [backend3]
+
+RUNNING HANDLER [chrony : Restart Chronyd] ************************************************************************************************************************************************************************************************************************************
+changed: [proxysql_srv]
+changed: [iscsi_srv]
+changed: [db-srv1]
+changed: [db-srv2]
+changed: [db-srv3]
+changed: [backend1]
+changed: [backend2]
+changed: [backend3]
+
+PLAY [install targetcli, create lun] ******************************************************************************************************************************************************************************************************************************************
+
+TASK [targetcli : Install targetcli] ******************************************************************************************************************************************************************************************************************************************
+changed: [iscsi_srv]
+
+TASK [targetcli : Gather targetcli status] ************************************************************************************************************************************************************************************************************************************
+fatal: [iscsi_srv]: FAILED! => {"changed": true, "cmd": ["targetcli", "/backstores/block/disk01", "info"], "delta": "0:00:00.366326", "end": "2023-12-28 09:25:43.489172", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:25:43.122846", "stderr": "No such path /backstores/block/disk01", "stderr_lines": ["No such path /backstores/block/disk01"], "stdout": "Warning: Could not load preferences file /root/.targetcli/prefs.bin.", "stdout_lines": ["Warning: Could not load preferences file /root/.targetcli/prefs.bin."]}
+...ignoring
+
+TASK [targetcli : Run targetcli configure] ************************************************************************************************************************************************************************************************************************************
+changed: [iscsi_srv] => (item=targetcli /backstores/block create disk01 /dev/vdb)
+changed: [iscsi_srv] => (item=targetcli /iscsi create iqn.2023-11.ru.otus:storage.target00)
+changed: [iscsi_srv] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/luns create /backstores/block/disk01 lun=1)
+changed: [iscsi_srv] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:cf70d4c706e)
+changed: [iscsi_srv] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:f5cfb68ca8f)
+changed: [iscsi_srv] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:e77b7b4d46a9)
+
+PLAY [install iscsi-client] ***************************************************************************************************************************************************************************************************************************************************
+
+TASK [iscsi-client : Install open-iscsi] **************************************************************************************************************************************************************************************************************************************
+changed: [backend3]
+changed: [backend1]
+changed: [backend2]
+
+TASK [iscsi-client : change InitiatorName pcs1] *******************************************************************************************************************************************************************************************************************************
+skipping: [backend2]
+skipping: [backend3]
+changed: [backend1]
+
+TASK [iscsi-client : change InitiatorName pcs2] *******************************************************************************************************************************************************************************************************************************
+skipping: [backend1]
+skipping: [backend3]
+changed: [backend2]
+
+TASK [iscsi-client : change InitiatorName pcs3] *******************************************************************************************************************************************************************************************************************************
+skipping: [backend1]
+skipping: [backend2]
+changed: [backend3]
+
+TASK [iscsi-client : iscsi_login] *********************************************************************************************************************************************************************************************************************************************
+changed: [backend2] => (item=iscsiadm -m discovery -t st -p 10.10.1.3)
+changed: [backend3] => (item=iscsiadm -m discovery -t st -p 10.10.1.3)
+changed: [backend1] => (item=iscsiadm -m discovery -t st -p 10.10.1.3)
+changed: [backend2] => (item=iscsiadm -m node -l -T iqn.2023-11.ru.otus:storage.target00)
+changed: [backend1] => (item=iscsiadm -m node -l -T iqn.2023-11.ru.otus:storage.target00)
+changed: [backend3] => (item=iscsiadm -m node -l -T iqn.2023-11.ru.otus:storage.target00)
+
+RUNNING HANDLER [iscsi-client : start_iscsi] **********************************************************************************************************************************************************************************************************************************
+changed: [backend2]
+changed: [backend3]
+changed: [backend1]
+
+RUNNING HANDLER [iscsi-client : restart_iscsid] *******************************************************************************************************************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+changed: [backend3]
+
+PLAY [install ha-cluster] *****************************************************************************************************************************************************************************************************************************************************
+
+TASK [ha-cluster : Enable highavailability repository (AlmaLinux)] ************************************************************************************************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+changed: [backend3]
+
+TASK [ha-cluster : Enable resilientstorage repository (AlmaLinux)] ************************************************************************************************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+changed: [backend3]
+
+TASK [ha-cluster : Install the Packages] **************************************************************************************************************************************************************************************************************************************
+changed: [backend3]
+changed: [backend1]
+changed: [backend2]
+
+TASK [ha-cluster : Add 'use_lvmlockd = 1' to LVM Confifuration File] **********************************************************************************************************************************************************************************************************
+changed: [backend2] => (item={'regexp': 'system_id_source =', 'line': "system_id_source = 'uname'"})
+changed: [backend3] => (item={'regexp': 'system_id_source =', 'line': "system_id_source = 'uname'"})
+changed: [backend1] => (item={'regexp': 'system_id_source =', 'line': "system_id_source = 'uname'"})
+changed: [backend1] => (item={'regexp': 'use_lvmlockd =', 'line': 'use_lvmlockd = 1'})
+changed: [backend3] => (item={'regexp': 'use_lvmlockd =', 'line': 'use_lvmlockd = 1'})
+changed: [backend2] => (item={'regexp': 'use_lvmlockd =', 'line': 'use_lvmlockd = 1'})
+changed: [backend1] => (item={'regexp': 'use_devicesfile =', 'line': 'use_devicesfile = 1'})
+changed: [backend3] => (item={'regexp': 'use_devicesfile =', 'line': 'use_devicesfile = 1'})
+changed: [backend2] => (item={'regexp': 'use_devicesfile =', 'line': 'use_devicesfile = 1'})
+
+TASK [ha-cluster : Add2 'locking_type = 1' to LVM Confifuration File] *********************************************************************************************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+changed: [backend3]
+
+TASK [ha-cluster : Start the lvmlockd service] ********************************************************************************************************************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+changed: [backend3]
+
+TASK [ha-cluster : Create directories for cluster mount] **********************************************************************************************************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+changed: [backend3]
+
+TASK [ha-cluster : Start the pcs service] *************************************************************************************************************************************************************************************************************************************
+changed: [backend3]
+changed: [backend1]
+changed: [backend2]
+
+TASK [ha-cluster : Set the password for the use hacluster] ********************************************************************************************************************************************************************************************************************
+[DEPRECATION WARNING]: Encryption using the Python crypt module is deprecated. The Python crypt module is deprecated and will be removed from Python 3.13. Install the passlib library for continued encryption functionality. This feature will be removed in version 2.17. 
+Deprecation warnings can be disabled by setting deprecation_warnings=False in ansible.cfg.
+[DEPRECATION WARNING]: Encryption using the Python crypt module is deprecated. The Python crypt module is deprecated and will be removed from Python 3.13. Install the passlib library for continued encryption functionality. This feature will be removed in version 2.17. 
+Deprecation warnings can be disabled by setting deprecation_warnings=False in ansible.cfg.
+[DEPRECATION WARNING]: Encryption using the Python crypt module is deprecated. The Python crypt module is deprecated and will be removed from Python 3.13. Install the passlib library for continued encryption functionality. This feature will be removed in version 2.17. 
+Deprecation warnings can be disabled by setting deprecation_warnings=False in ansible.cfg.
+changed: [backend1]
+changed: [backend3]
+changed: [backend2]
+
+TASK [ha-cluster : Gather cluster status] *************************************************************************************************************************************************************************************************************************************
+fatal: [backend3]: FAILED! => {"changed": true, "cmd": ["pcs", "cluster", "status"], "delta": "0:00:00.935738", "end": "2023-12-28 09:27:46.849422", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:27:45.913684", "stderr": "Error: cluster is not currently running on this node", "stderr_lines": ["Error: cluster is not currently running on this node"], "stdout": "", "stdout_lines": []}
+...ignoring
+fatal: [backend2]: FAILED! => {"changed": true, "cmd": ["pcs", "cluster", "status"], "delta": "0:00:01.109345", "end": "2023-12-28 09:27:46.979802", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:27:45.870457", "stderr": "Error: cluster is not currently running on this node", "stderr_lines": ["Error: cluster is not currently running on this node"], "stdout": "", "stdout_lines": []}
+...ignoring
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": ["pcs", "cluster", "status"], "delta": "0:00:01.080855", "end": "2023-12-28 09:27:46.988307", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:27:45.907452", "stderr": "Error: cluster is not currently running on this node", "stderr_lines": ["Error: cluster is not currently running on this node"], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [ha-cluster : Authenticate the cluster] **********************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Setup the HA-Cluster] **************************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Start the HA-Cluster] **************************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Enable the HA-Cluster] *************************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Setting stonith-enabled=false] *****************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Setting 'No Quorum' Policy] ********************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Gather dlm resource status] ********************************************************************************************************************************************************************************************************************************
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "dlm-clone"], "delta": "0:00:00.954643", "end": "2023-12-28 09:28:19.177597", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:28:18.222954", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'dlm-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'dlm-clone'"]}
+...ignoring
+fatal: [backend2]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "dlm-clone"], "delta": "0:00:01.019191", "end": "2023-12-28 09:28:19.188369", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:28:18.169178", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'dlm-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'dlm-clone'"]}
+...ignoring
+fatal: [backend3]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "dlm-clone"], "delta": "0:00:00.881559", "end": "2023-12-28 09:28:19.196199", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:28:18.314640", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'dlm-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'dlm-clone'"]}
+...ignoring
+
+TASK [ha-cluster : Creating 'dlm' Resource] ***********************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Gather lvmlockd resource status] ***************************************************************************************************************************************************************************************************************************
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "lvmlockd-clone"], "delta": "0:00:00.926838", "end": "2023-12-28 09:28:23.788103", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:28:22.861265", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'lvmlockd-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'lvmlockd-clone'"]}
+...ignoring
+fatal: [backend3]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "lvmlockd-clone"], "delta": "0:00:00.906772", "end": "2023-12-28 09:28:23.828617", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:28:22.921845", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'lvmlockd-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'lvmlockd-clone'"]}
+...ignoring
+fatal: [backend2]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "lvmlockd-clone"], "delta": "0:00:01.064635", "end": "2023-12-28 09:28:23.923856", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:28:22.859221", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'lvmlockd-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'lvmlockd-clone'"]}
+...ignoring
+
+TASK [ha-cluster : Creating lvmlockd Resource] ********************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Creating First Constraint] *********************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Pause] *****************************************************************************************************************************************************************************************************************************************************
+Pausing for 10 seconds
+(ctrl+C then 'C' = continue early, ctrl+C then 'A' = abort)
+ok: [backend1]
+
+TASK [ha-cluster : Gather pvs /dev/sda] ***************************************************************************************************************************************************************************************************************************************
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": "pvs | grep /dev/sda", "delta": "0:00:01.084321", "end": "2023-12-28 09:28:41.305842", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:28:40.221521", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [ha-cluster : Creating Physical Volume] **********************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Gather vgs /dev/sda] ***************************************************************************************************************************************************************************************************************************************
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": "vgs | grep cluster_vg", "delta": "0:00:00.036404", "end": "2023-12-28 09:28:44.158826", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:28:44.122422", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [ha-cluster : Creating Volume Group] *************************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : start lock manager for shared] *****************************************************************************************************************************************************************************************************************************
+skipping: [backend1]
+skipping: [backend3]
+changed: [backend2]
+
+TASK [ha-cluster : Pause] *****************************************************************************************************************************************************************************************************************************************************
+Pausing for 10 seconds
+(ctrl+C then 'C' = continue early, ctrl+C then 'A' = abort)
+ok: [backend1]
+
+TASK [ha-cluster : Gather lvs | grep cluster_lv] ******************************************************************************************************************************************************************************************************************************
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": "lvs | grep cluster_lv", "delta": "0:00:00.049096", "end": "2023-12-28 09:29:03.585461", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:29:03.536365", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [ha-cluster : Creating Logical Volume] ***********************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Formatting Logical Volume With GFS2] ***********************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Gather cluster_vg-clone resource status] *******************************************************************************************************************************************************************************************************************
+fatal: [backend2]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "cluster_vg-clone"], "delta": "0:00:01.026530", "end": "2023-12-28 09:29:11.536872", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:29:10.510342", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'cluster_vg-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'cluster_vg-clone'"]}
+...ignoring
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "cluster_vg-clone"], "delta": "0:00:00.981107", "end": "2023-12-28 09:29:11.599159", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:29:10.618052", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'cluster_vg-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'cluster_vg-clone'"]}
+...ignoring
+fatal: [backend3]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "cluster_vg-clone"], "delta": "0:00:00.916436", "end": "2023-12-28 09:29:11.597409", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:29:10.680973", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'cluster_vg-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'cluster_vg-clone'"]}
+...ignoring
+
+TASK [ha-cluster : create LVM-activate resource] ******************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : set start order as [locking] → [shared_vg]] ****************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : set that [shared_vg] and [locking] start on a same node] ***************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : Gather clusterfs-clone resource status] ********************************************************************************************************************************************************************************************************************
+fatal: [backend1]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "clusterfs-clone"], "delta": "0:00:00.941868", "end": "2023-12-28 09:29:21.324212", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:29:20.382344", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'clusterfs-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'clusterfs-clone'"]}
+...ignoring
+fatal: [backend2]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "clusterfs-clone"], "delta": "0:00:01.110035", "end": "2023-12-28 09:29:21.498762", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:29:20.388727", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'clusterfs-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'clusterfs-clone'"]}
+...ignoring
+fatal: [backend3]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "clusterfs-clone"], "delta": "0:00:00.904720", "end": "2023-12-28 09:29:21.475509", "msg": "non-zero return code", "rc": 1, "start": "2023-12-28 09:29:20.570789", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'clusterfs-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'clusterfs-clone'"]}
+...ignoring
+
+TASK [ha-cluster : Creating Cluster File System] ******************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : set start order as [shared_vg] → [shared_fs]] **************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [ha-cluster : set that [shared_fs] and [shared_vg] start on a same node] *************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+PLAY [install-mysql] **********************************************************************************************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] ********************************************************************************************************************************************************************************************************************************************************
+ok: [db-srv2]
+ok: [db-srv3]
+ok: [db-srv1]
+
+TASK [db : Put SELinux in permissive mode, logging actions that would be blocked.] ********************************************************************************************************************************************************************************************
+changed: [db-srv2]
+changed: [db-srv3]
+changed: [db-srv1]
+
+TASK [db : install percona key] ***********************************************************************************************************************************************************************************************************************************************
+changed: [db-srv2]
+changed: [db-srv3]
+changed: [db-srv1]
+
+TASK [db : Install percona repo] **********************************************************************************************************************************************************************************************************************************************
+changed: [db-srv3]
+changed: [db-srv2]
+changed: [db-srv1]
+
+TASK [db : Update cache] ******************************************************************************************************************************************************************************************************************************************************
+ok: [db-srv3]
+ok: [db-srv2]
+ok: [db-srv1]
+
+TASK [db : percona-release setup pxc-80] **************************************************************************************************************************************************************************************************************************************
+changed: [db-srv3]
+changed: [db-srv1]
+changed: [db-srv2]
+
+TASK [db : Install packages] **************************************************************************************************************************************************************************************************************************************************
+changed: [db-srv3]
+changed: [db-srv2]
+changed: [db-srv1]
+
+TASK [db : Restart Percona service] *******************************************************************************************************************************************************************************************************************************************
+changed: [db-srv3]
+changed: [db-srv2]
+changed: [db-srv1]
+
+TASK [db : Get temporary mysql root password] *********************************************************************************************************************************************************************************************************************************
+changed: [db-srv2]
+changed: [db-srv3]
+changed: [db-srv1]
+
+TASK [db : ansible.builtin.debug] *********************************************************************************************************************************************************************************************************************************************
+ok: [db-srv1] => {
+    "msg": "mb4=cjowr7)H"
+}
+ok: [db-srv2] => {
+    "msg": "kkJ15YyUez_f"
+}
+ok: [db-srv3] => {
+    "msg": "q=:iufus_3Jw"
+}
+
+TASK [db : Create .my.cnf file for root user] *********************************************************************************************************************************************************************************************************************************
+changed: [db-srv3]
+changed: [db-srv1]
+changed: [db-srv2]
+
+TASK [db : start and enable mysql service] ************************************************************************************************************************************************************************************************************************************
+ok: [db-srv2]
+ok: [db-srv3]
+ok: [db-srv1]
+
+TASK [db : Set new root password] *********************************************************************************************************************************************************************************************************************************************
+ok: [db-srv3]
+ok: [db-srv1]
+ok: [db-srv2]
+
+TASK [db : Save root password in .my.cnf] *************************************************************************************************************************************************************************************************************************************
+changed: [db-srv2]
+changed: [db-srv3]
+changed: [db-srv1]
+
+TASK [db : Stop Percona service] **********************************************************************************************************************************************************************************************************************************************
+changed: [db-srv3]
+changed: [db-srv2]
+changed: [db-srv1]
+
+TASK [db : Configure /etc/my.cnf.] ********************************************************************************************************************************************************************************************************************************************
+ok: [db-srv2] => (item={'key': '^wsrep_provider=', 'value': 'wsrep_provider=/usr/lib64/galera4/libgalera_smm.so'})
+ok: [db-srv3] => (item={'key': '^wsrep_provider=', 'value': 'wsrep_provider=/usr/lib64/galera4/libgalera_smm.so'})
+ok: [db-srv1] => (item={'key': '^wsrep_provider=', 'value': 'wsrep_provider=/usr/lib64/galera4/libgalera_smm.so'})
+ok: [db-srv2] => (item={'key': '^wsrep_cluster_name=', 'value': 'wsrep_cluster_name=pxc-cluster'})
+ok: [db-srv3] => (item={'key': '^wsrep_cluster_name=', 'value': 'wsrep_cluster_name=pxc-cluster'})
+ok: [db-srv1] => (item={'key': '^wsrep_cluster_name=', 'value': 'wsrep_cluster_name=pxc-cluster'})
+changed: [db-srv2] => (item={'key': '^wsrep_cluster_address=gcomm://', 'value': 'wsrep_cluster_address=gcomm://10.10.1.4,10.10.2.4,10.10.3.4'})
+changed: [db-srv3] => (item={'key': '^wsrep_cluster_address=gcomm://', 'value': 'wsrep_cluster_address=gcomm://10.10.1.4,10.10.2.4,10.10.3.4'})
+changed: [db-srv1] => (item={'key': '^wsrep_cluster_address=gcomm://', 'value': 'wsrep_cluster_address=gcomm://10.10.1.4,10.10.2.4,10.10.3.4'})
+changed: [db-srv2] => (item={'key': '^wsrep_node_name=', 'value': 'wsrep_node_name=db-srv2'})
+changed: [db-srv3] => (item={'key': '^wsrep_node_name=', 'value': 'wsrep_node_name=db-srv3'})
+changed: [db-srv1] => (item={'key': '^wsrep_node_name=', 'value': 'wsrep_node_name=db-srv1'})
+changed: [db-srv2] => (item={'key': 'wsrep_node_address=', 'value': 'wsrep_node_address=10.10.2.4'})
+changed: [db-srv3] => (item={'key': 'wsrep_node_address=', 'value': 'wsrep_node_address=10.10.3.4'})
+changed: [db-srv1] => (item={'key': 'wsrep_node_address=', 'value': 'wsrep_node_address=10.10.1.4'})
+
+TASK [db : Template config file ssl.cnf to /etc/my.cnf.d/] ********************************************************************************************************************************************************************************************************************
+changed: [db-srv3] => (item=ssl.cnf)
+changed: [db-srv2] => (item=ssl.cnf)
+changed: [db-srv1] => (item=ssl.cnf)
+
+TASK [db : Copy mysql certificates from /var/lib/mysql to /tmp] ***************************************************************************************************************************************************************************************************************
+skipping: [db-srv2] => (item=server-key.pem) 
+skipping: [db-srv2] => (item=server-cert.pem) 
+skipping: [db-srv2] => (item=ca.pem) 
+skipping: [db-srv2]
+skipping: [db-srv3] => (item=server-key.pem) 
+skipping: [db-srv3] => (item=server-cert.pem) 
+skipping: [db-srv3] => (item=ca.pem) 
+skipping: [db-srv3]
+changed: [db-srv1] => (item=server-key.pem)
+changed: [db-srv1] => (item=server-cert.pem)
+changed: [db-srv1] => (item=ca.pem)
+
+TASK [db : Copy mysql certificates from /tmp to /var/lib/mysql] ***************************************************************************************************************************************************************************************************************
+skipping: [db-srv1] => (item=server-key.pem) 
+skipping: [db-srv1] => (item=server-cert.pem) 
+skipping: [db-srv1] => (item=ca.pem) 
+skipping: [db-srv1]
+changed: [db-srv2] => (item=server-key.pem)
+changed: [db-srv3] => (item=server-key.pem)
+changed: [db-srv3] => (item=server-cert.pem)
+changed: [db-srv2] => (item=server-cert.pem)
+changed: [db-srv2] => (item=ca.pem)
+changed: [db-srv3] => (item=ca.pem)
+
+TASK [db : Start mysql@bootstrap service in first db-server] ******************************************************************************************************************************************************************************************************************
+skipping: [db-srv2]
+skipping: [db-srv3]
+changed: [db-srv1]
+
+TASK [db : Start mysql service in other db-servers] ***************************************************************************************************************************************************************************************************************************
+skipping: [db-srv1]
+changed: [db-srv3]
+changed: [db-srv2]
+
+TASK [db : Stop mysql@bootstrap service in first db-server] *******************************************************************************************************************************************************************************************************************
+ok: [db-srv2]
+ok: [db-srv3]
+changed: [db-srv1]
+
+TASK [db : Start mysql service in first db-server] ****************************************************************************************************************************************************************************************************************************
+ok: [db-srv3]
+ok: [db-srv2]
+changed: [db-srv1]
+
+TASK [db : Stop mysql@bootstrap service in first db-server] *******************************************************************************************************************************************************************************************************************
+skipping: [db-srv2]
+skipping: [db-srv3]
+ok: [db-srv1]
+
+TASK [db : Start mysql service in first db-server] ****************************************************************************************************************************************************************************************************************************
+skipping: [db-srv2]
+skipping: [db-srv3]
+ok: [db-srv1]
+
+TASK [db : creating wordpress database] ***************************************************************************************************************************************************************************************************************************************
+skipping: [db-srv2]
+skipping: [db-srv3]
+changed: [db-srv1]
+
+TASK [db : creating mysql user for wordpress for XtraDB Cluster] **************************************************************************************************************************************************************************************************************
+skipping: [db-srv2]
+skipping: [db-srv3]
+[WARNING]: Option column_case_sensitive is not provided. The default is now false, so the column's name will be uppercased. The default will be changed to true in community.mysql 4.0.0.
+changed: [db-srv1]
+
+TASK [db : Create proxysql for monitoring] ************************************************************************************************************************************************************************************************************************************
+skipping: [db-srv2]
+skipping: [db-srv3]
+changed: [db-srv1]
+
+TASK [db : Create user sbuser for proxysql] ***********************************************************************************************************************************************************************************************************************************
+skipping: [db-srv2]
+skipping: [db-srv3]
+changed: [db-srv1]
+
+PLAY [install-proxysql] *******************************************************************************************************************************************************************************************************************************************************
+
+TASK [proxysql : Put SELinux in permissive mode, logging actions that would be blocked.] **************************************************************************************************************************************************************************************
+changed: [proxysql_srv]
+
+TASK [proxysql : install percona key] *****************************************************************************************************************************************************************************************************************************************
+changed: [proxysql_srv]
+
+TASK [proxysql : Install percona repo] ****************************************************************************************************************************************************************************************************************************************
+changed: [proxysql_srv]
+
+TASK [proxysql : Update cache] ************************************************************************************************************************************************************************************************************************************************
+ok: [proxysql_srv]
+
+TASK [proxysql : percona-release setup pxc-80] ********************************************************************************************************************************************************************************************************************************
+changed: [proxysql_srv]
+
+TASK [proxysql : Install packages] ********************************************************************************************************************************************************************************************************************************************
+changed: [proxysql_srv]
+
+TASK [proxysql : Restart proxysql service] ************************************************************************************************************************************************************************************************************************************
+changed: [proxysql_srv]
+
+TASK [proxysql : Insert into mysql_servers (hostgroup_id, hostname, port)] ****************************************************************************************************************************************************************************************************
+changed: [proxysql_srv] => (item=INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'10.10.1.4',3306);)
+changed: [proxysql_srv] => (item=INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'10.10.2.4',3306);)
+changed: [proxysql_srv] => (item=INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'10.10.3.4',3306);)
+
+TASK [proxysql : UPDATE global_variables mysql-monitor_username and mysql-monitor_password] ***********************************************************************************************************************************************************************************
+changed: [proxysql_srv] => (item=UPDATE global_variables SET variable_value='proxysql' WHERE variable_name='mysql-monitor_username';)
+changed: [proxysql_srv] => (item=UPDATE global_variables SET variable_value='GTa4Cl' WHERE variable_name='mysql-monitor_password';)
+
+TASK [proxysql : Load and save proxysql config for variables] *****************************************************************************************************************************************************************************************************************
+changed: [proxysql_srv] => (item=LOAD MYSQL VARIABLES TO RUNTIME;)
+changed: [proxysql_srv] => (item=SAVE MYSQL VARIABLES TO DISK;)
+
+TASK [proxysql : Load and save proxysql config for variables] *****************************************************************************************************************************************************************************************************************
+changed: [proxysql_srv] => (item=LOAD MYSQL VARIABLES TO RUNTIME;)
+changed: [proxysql_srv] => (item=SAVE MYSQL VARIABLES TO DISK;)
+
+TASK [proxysql : Enable monitoring of these nodes, load them at runtime] ******************************************************************************************************************************************************************************************************
+changed: [proxysql_srv] => (item=LOAD MYSQL SERVERS TO RUNTIME;)
+
+TASK [proxysql : Add user phpadmin to proxysql] *******************************************************************************************************************************************************************************************************************************
+changed: [proxysql_srv] => (item=INSERT INTO mysql_users (username,password) VALUES ('wp_user','Db%@du8347Db');)
+
+TASK [proxysql : Load and save proxysql config for users] *********************************************************************************************************************************************************************************************************************
+changed: [proxysql_srv] => (item=LOAD MYSQL USERS TO RUNTIME;)
+changed: [proxysql_srv] => (item=SAVE MYSQL USERS TO DISK;)
+
+PLAY [install-wordpress] ******************************************************************************************************************************************************************************************************************************************************
+
+TASK [wordpress : Put SELinux in permissive mode, logging actions that would be blocked.] *************************************************************************************************************************************************************************************
+changed: [backend1]
+changed: [backend3]
+changed: [backend2]
+
+TASK [wordpress : Installing Nginx Repository] ********************************************************************************************************************************************************************************************************************************
+changed: [backend2]
+changed: [backend3]
+changed: [backend1]
+
+TASK [wordpress : install Nginx] **********************************************************************************************************************************************************************************************************************************************
+changed: [backend3]
+changed: [backend1]
+changed: [backend2]
+
+TASK [wordpress : Import Remi KEY] ********************************************************************************************************************************************************************************************************************************************
+changed: [backend3]
+changed: [backend2]
+changed: [backend1]
+
+TASK [wordpress : Installing Remi Repository] *********************************************************************************************************************************************************************************************************************************
+changed: [backend3]
+changed: [backend1]
+changed: [backend2]
+
+TASK [wordpress : Enable PHP Remi Repository] *********************************************************************************************************************************************************************************************************************************
+changed: [backend3] => (item=dnf module reset php -y)
+changed: [backend1] => (item=dnf module reset php -y)
+changed: [backend3] => (item=dnf module enable php:remi-8.2 -y)
+changed: [backend1] => (item=dnf module enable php:remi-8.2 -y)
+changed: [backend2] => (item=dnf module reset php -y)
+changed: [backend2] => (item=dnf module enable php:remi-8.2 -y)
+
+TASK [wordpress : Install php-fpm and PHP extensions] *************************************************************************************************************************************************************************************************************************
+changed: [backend3]
+changed: [backend1]
+changed: [backend2]
+
+TASK [wordpress : change user in /etc/php-fpm.d/www.conf] *********************************************************************************************************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+changed: [backend3]
+
+TASK [wordpress : change group in /etc/php-fpm.d/www.conf] ********************************************************************************************************************************************************************************************************************
+changed: [backend1]
+changed: [backend2]
+changed: [backend3]
+
+TASK [wordpress : Copy wordpress conf] ****************************************************************************************************************************************************************************************************************************************
+changed: [backend2]
+changed: [backend3]
+changed: [backend1]
+
+TASK [wordpress : Download wordpress] *****************************************************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [wordpress : Extract wordpress] ******************************************************************************************************************************************************************************************************************************************
+changed: [backend1] => (item=tar -xzf /root/latest.tar.gz)
+changed: [backend1] => (item=mv /home/akopalev/wordpress /var/www/)
+changed: [backend1] => (item=chown -R nginx:nginx /var/www/wordpress)
+
+TASK [wordpress : Template a file to /var/www/wordpress/wp-config.php] ********************************************************************************************************************************************************************************************************
+changed: [backend1]
+
+TASK [wordpress : Start Nginx Service] ****************************************************************************************************************************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+changed: [backend3]
+
+TASK [wordpress : Start php-fpm Service] **************************************************************************************************************************************************************************************************************************************
+changed: [backend2]
+changed: [backend1]
+changed: [backend3]
+
+PLAY RECAP ********************************************************************************************************************************************************************************************************************************************************************
+backend1                   : ok=62   changed=58   unreachable=0    failed=0    skipped=3    rescued=0    ignored=8   
+backend2                   : ok=36   changed=34   unreachable=0    failed=0    skipped=2    rescued=0    ignored=5   
+backend3                   : ok=35   changed=33   unreachable=0    failed=0    skipped=3    rescued=0    ignored=5   
+db-srv1                    : ok=31   changed=22   unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+db-srv2                    : ok=25   changed=16   unreachable=0    failed=0    skipped=8    rescued=0    ignored=0   
+db-srv3                    : ok=25   changed=16   unreachable=0    failed=0    skipped=8    rescued=0    ignored=0   
+iscsi_srv                  : ok=7    changed=5    unreachable=0    failed=0    skipped=0    rescued=0    ignored=1   
+proxysql_srv               : ok=18   changed=15   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
