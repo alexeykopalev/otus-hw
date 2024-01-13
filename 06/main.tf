@@ -12,14 +12,11 @@ variable "dns_recordset_name" {
 
 locals {
   network_name       = "network1"
-  # subnet_name1       = "subnet-a"
+  subnet_name1       = "subnet-a"
   subnet_name2       = "subnet-b"
-  # subnet_name3       = "subnet-c"
+  subnet_name3       = "subnet-c"
   sg_vm_name         = "sg-vm"
-  # sg_pgsql_name      = "sg-pgsql"
-  # vm_name            = "joomla-pg-tutorial-web"
-  # cluster_name       = "joomla-pg-tutorial-db-cluster"
-  # db_name            = "joomla-pg-tutorial-db"
+  sg_pgsql_name      = "sg-pgsql"
   dns_zone_name      = "zone-1"
 }
 
@@ -46,13 +43,13 @@ resource "yandex_vpc_subnet" "subnet-bast" {
 
 # # Creating a subnet in ru-central1-a availability zone
 
-# resource "yandex_vpc_subnet" "subnet-a" {
-#   name           = local.subnet_name1
-#   zone           = "ru-central1-a"
-#   v4_cidr_blocks = ["10.10.5.0/24"]
-#   network_id     = yandex_vpc_network.joomla-pg-network.id
-#   route_table_id = yandex_vpc_route_table.rt.id
-# }
+resource "yandex_vpc_subnet" "subnet-a" {
+  name           = local.subnet_name1
+  zone           = "ru-central1-a"
+  v4_cidr_blocks = ["10.10.5.0/24"]
+  network_id     = yandex_vpc_network.network1.id
+  route_table_id = yandex_vpc_route_table.rt.id
+}
 
 # Creating a subnet in ru-central1-b availability zone
 
@@ -66,13 +63,13 @@ resource "yandex_vpc_subnet" "subnet-b" {
 
 # # Creating a subnet in ru-central1-c availability zone
 
-# resource "yandex_vpc_subnet" "subnet-c" {
-#   name           = local.subnet_name3
-#   zone           = "ru-central1-c"
-#   v4_cidr_blocks = ["10.7.0.0/24"]
-#   network_id     = yandex_vpc_network.joomla-pg-network.id
-#   route_table_id = yandex_vpc_route_table.rt.id
-# }
+resource "yandex_vpc_subnet" "subnet-c" {
+  name           = local.subnet_name3
+  zone           = "ru-central1-c"
+  v4_cidr_blocks = ["10.10.7.0/24"]
+  network_id     = yandex_vpc_network.network1.id
+  route_table_id = yandex_vpc_route_table.rt.id
+}
 
 resource "yandex_vpc_gateway" "nat_gateway" {
   name = "test-gateway"
@@ -162,67 +159,40 @@ module "vms-sec-sg-create" {
   ]
 }
 
-# resource "yandex_vpc_security_group" "pgsql-sg" {
-#   name       = local.sg_pgsql_name
-#   network_id = yandex_vpc_network.joomla-pg-network.id
-
-#   egress {
-#     protocol       = "ANY"
-#     description    = "ANY"
-#     v4_cidr_blocks = ["0.0.0.0/0"]
-#     from_port      = 0
-#     to_port        = 65535
-#   }
-
-#   ingress {
-#     description    = "PostgreSQL"
-#     port           = 6432
-#     protocol       = "TCP"
-#     v4_cidr_blocks = ["0.0.0.0/0"]
-#   }
-# }
-
-# Creating a security group for the virtual machine
-
-# resource "yandex_vpc_security_group" "vm-sg" {
-#   name       = local.sg_vm_name
-#   network_id = yandex_vpc_network.joomla-pg-network.id
-
-#   egress {
-#     protocol       = "ANY"
-#     description    = "ANY"
-#     v4_cidr_blocks = ["0.0.0.0/0"]
-#     from_port      = 0
-#     to_port        = 65535
-#   }
-
-#   ingress {
-#     description    = "HTTP"
-#     protocol       = "TCP"
-#     v4_cidr_blocks = ["0.0.0.0/0"]
-#     port           = 80
-#   }
-
-#   ingress {
-#     description    = "HTTPS"
-#     protocol       = "TCP"
-#     v4_cidr_blocks = ["0.0.0.0/0"]
-#     port           = 443
-#   }
-
-#   ingress {
-#     description    = "SSH"
-#     protocol       = "ANY"
-#     v4_cidr_blocks = ["0.0.0.0/0"]
-#     port           = 22
-#   }
-# }
-
-# # Creating a disk image from a Cloud Marketplace product
-
-# resource "yandex_compute_image" "joomla-pg-vm-image" {
-#   source_family = "centos-stream-8"
-# }
+# Creating a security group for PostgreSQL cluster
+module "pgsql-sec-sg-create" {
+  source = "./modules/sg-create"
+  name = "pgsql-sec-sg"
+  network_id = yandex_vpc_network.network1.id
+  rules = [
+    {
+      direction      = "egress"
+      protocol       = "ANY"
+      description    = "Разрешить весь исходящий трафик"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+     },
+    {
+      direction      = "ingress"
+      protocol       = "ICMP"
+      description    = "Разрешить ping"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      direction      = "ingress"
+      protocol       = "TCP"
+      description    = "Разрешить SSH от бастионного хоста"
+      v4_cidr_blocks = ["172.16.16.0/24"]
+      port           = 22
+    },
+    {
+      direction      = "ingress"
+      protocol       = "TCP"
+      description    = "PostgreSQL"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+      port           = 6432
+    }
+  ]
+}
 
 # # Creating a virtual machine
 
@@ -262,101 +232,48 @@ module "web-host" {
   sec-gr = [module.vms-sec-sg-create.sg_id]
 }
 
-module "db-host" {
+locals {
+  db_vms = [
+    {
+      name       = "db-host1"
+      zone       = "ru-central1-a"
+      subnetwork_id = "${yandex_vpc_subnet.subnet-a.id}"
+      ip_address = "10.10.5.4"
+    },
+    {
+      name       = "db-host2"
+      zone       = "ru-central1-b"
+      subnetwork_id = "${yandex_vpc_subnet.subnet-b.id}"
+      ip_address = "10.10.6.4"
+    },
+    {
+      name       = "db-host3"
+      zone       = "ru-central1-c"
+      subnetwork_id = "${yandex_vpc_subnet.subnet-c.id}"
+      ip_address = "10.10.7.4"
+    }
+  ]
+}
+
+module "db-hosts" {
+  for_each   = {for index, vm in local.db_vms:
+    vm.name => vm
+  }
   source = "./modules/vm-create"
-  name = "db-host"
+  name = each.value.name
   platform = "standard-v1"
-  zone = "ru-central1-b"
-  hostname = "db-host"
+  zone = each.value.zone
+  hostname = each.value.name
   cpu = 2
   ram = 2
   image_id = "fd81prb1447ilqb2mp3m"
   disk_size = 10
   sec_disk_id = {}
   core_fraction = 20
-  subnetwork_id = yandex_vpc_subnet.subnet-b.id
-  ip = "10.10.6.4"
+  subnetwork_id = each.value.subnetwork_id
+  ip = each.value.ip_address
   sec-gr = [module.vms-sec-sg-create.sg_id]
 }
-# resource "yandex_compute_instance" "joomla-pg-vm" {
-#   name               = local.vm_name
-#   platform_id        = "standard-v3"
-#   zone               = "ru-central1-b"
-
-#   resources {
-#     cores         = 2
-#     memory        = 1
-#     core_fraction = 20
-#   }
-
-#   boot_disk {
-#     initialize_params {
-#       image_id = yandex_compute_image.joomla-pg-vm-image.id
-#       size     = 10
-#     }
-#   }
-
-#   network_interface {
-#     subnet_id          = yandex_vpc_subnet.joomla-pg-network-subnet-b.id
-#     nat                = true
-#     nat_ip_address     = var.nat_ip
-#     security_group_ids = [ yandex_vpc_security_group.vm-sg.id ]
-#   }
-
-#   metadata = {
-#     user-data = file("./cloud-config")
-#   }
-# }
-
-# # Creating a PostgreSQL cluster
-
-# resource "yandex_mdb_postgresql_cluster" "joomla-pg-cluster" {
-#   name                = local.cluster_name
-#   environment         = "PRODUCTION"
-#   network_id          = yandex_vpc_network.joomla-pg-network.id
-#   security_group_ids  = [ yandex_vpc_security_group.pgsql-sg.id ]
-
-#   config {
-#     version = "14"
-#     resources {
-# //      resource_preset_id = "b2.medium"
-#       resource_preset_id = "c3-c2-m4"
-#       disk_type_id       = "network-ssd"
-#       disk_size          = 10
-#     }
-#   }
-
-#   host {
-#     zone      = "ru-central1-a"
-#     subnet_id = yandex_vpc_subnet.joomla-pg-network-subnet-a.id
-#   }
-
-#   host {
-#     zone      = "ru-central1-b"
-#     subnet_id = yandex_vpc_subnet.joomla-pg-network-subnet-b.id
-#   }
-
-#   host {
-#     zone      = "ru-central1-c"
-#     subnet_id = yandex_vpc_subnet.joomla-pg-network-subnet-c.id
-#   }
-# }
-
-# # Creating a database
-
-# resource "yandex_mdb_postgresql_database" "joomla-pg-tutorial-db" {
-#   cluster_id = yandex_mdb_postgresql_cluster.joomla-pg-cluster.id
-#   name       = local.db_name
-#   owner      = var.db_user
-# }
-
-# # Creating a database user
-
-# resource "yandex_mdb_postgresql_user" "joomla-user" {
-#   cluster_id = yandex_mdb_postgresql_cluster.joomla-pg-cluster.id
-#   name       = var.db_user
-#   password   = var.db_password
-# }
 
 # Creating a Cloud DNS zone
 

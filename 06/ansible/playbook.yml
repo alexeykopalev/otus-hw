@@ -13,9 +13,9 @@
   roles:
   - wordpress
 
-- name: install-postgresql
-  hosts: db_hosts
-  gather_facts: false
-  become: yes
-  roles:
-  - postgresql
+# - name: install-postgresql
+#   hosts: db_hosts
+#   gather_facts: false
+#   become: yes
+#   roles:
+#   - postgresql
