@@ -1,0 +1,63 @@
+scope: PgsqlCluster
+name: {{ ansible_hostname }}
+
+restapi:
+    listen: {{ ansible_host }}:8008
+    connect_address: {{ ansible_host }}:8008
+
+etcd:
+    hosts: 10.10.5.4:2379,10.10.6.4:2379,10.10.7.4:2379 
+    
+bootstrap:
+    dcs:
+        ttl: 100
+        loop_wait: 10
+        retry_timeout: 10
+        maximum_lag_on_failover: 1048576
+        postgresql:
+          use_pg_rewind: true
+          use_slots: true
+          parameters:
+            wal_level: replica
+            hot_standby: "on"
+            wal_keep_segments: 5120
+            max_wal_senders: 5
+            max_replication_slots: 5
+            checkpoint_timeout: 30
+   
+          pg_hba:
+          - host replication replicator 127.0.0.1/32 md5
+          - host replication replicator 10.10.5.4/0 md5
+          - host replication replicator 10.10.6.4/0 md5
+          - host replication replicator 10.10.7.4/0 md5
+          - host all all 0.0.0.0/0 md5
+
+initdb:
+- encoding: UTF8
+- data-checksums
+
+postgresql:
+    listen: {{ ansible_host }}:5432
+    connect_address: {{ ansible_host }}:5432
+    data_dir: /var/lib/pgsql/14/data
+    bin_dir:  /usr/pgsql-14/bin/
+    pgpass: /tmp/pgpass
+    authentication:
+        replication:
+          username: replicator
+          password: rep-pass
+        superuser:
+          username: postgres
+          password: zalando
+        rewind:  # Has no effect on postgres 10 and lower
+          username: rewind_user
+          password: rewind_password
+
+    parameters:
+        unix_socket_directories: '..' # parent directory of data_dir
+    
+tags:
+    nofailover: false
+    noloadbalance: false
+    clonefrom: false
+    nosync: false

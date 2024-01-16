@@ -4,6 +4,8 @@ backend1 ansible_host=10.10.6.3 ansible_user=akopalev
 [backend_hosts:vars]
 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q bastion"'
 [db_hosts]
-db1 ansible_host=10.10.6.4 ansible_user=akopalev
+db-host1 ansible_host=10.10.5.4 ansible_user=akopalev
+db-host2 ansible_host=10.10.6.4 ansible_user=akopalev
+db-host3 ansible_host=10.10.7.4 ansible_user=akopalev
 [db_hosts:vars]
 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q bastion"'

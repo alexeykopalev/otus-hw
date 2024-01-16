@@ -143,10 +143,45 @@ module "vms-sec-sg-create" {
     },
     {
       direction      = "ingress"
-      description    = "PostgreSQL"
+      description    = "PostgreSQL subnet-a"
+      port           = 5432
+      protocol       = "TCP"
+      v4_cidr_blocks = ["10.10.5.0/24"]
+    },
+    {
+      direction      = "ingress"
+      description    = "PostgreSQL subnet-b"
       port           = 5432
       protocol       = "TCP"
       v4_cidr_blocks = ["10.10.6.0/24"]
+    },
+    {
+      direction      = "ingress"
+      description    = "PostgreSQL subnet-c"
+      port           = 5432
+      protocol       = "TCP"
+      v4_cidr_blocks = ["10.10.7.0/24"]
+    },
+    {
+      direction      = "ingress"
+      description    = "etcd1"
+      port           = 2379
+      protocol       = "TCP"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      direction      = "ingress"
+      description    = "etcd2"
+      port           = 2380
+      protocol       = "TCP"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      direction      = "ingress"
+      description    = "patroni rest api"
+      port           = 8008
+      protocol       = "TCP"
+      v4_cidr_blocks = ["0.0.0.0/0"]
     },
     {
       direction      = "ingress"

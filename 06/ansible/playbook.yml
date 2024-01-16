@@ -6,16 +6,16 @@
   roles:
   - chrony
 
-- name: install-wordpress
-  hosts: backend_hosts
-  gather_facts: false
-  become: yes
-  roles:
-  - wordpress
-
-# - name: install-postgresql
-#   hosts: db_hosts
+# - name: install-wordpress
+#   hosts: backend_hosts
 #   gather_facts: false
 #   become: yes
 #   roles:
-#   - postgresql
+#   - wordpress
+
+- name: install pgsql cluster
+  hosts: db_hosts
+  #gather_facts: false
+  become: yes
+  roles:
+  - pgsql-cluster
