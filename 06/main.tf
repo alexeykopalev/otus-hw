@@ -116,9 +116,9 @@ module "bast-sec-sg-create" {
 }
 
 # Creating a security group for web-vm and pg-vm
-module "vms-sec-sg-create" {
+module "back-sec-sg-create" {
   source = "./modules/sg-create"
-  name = "vms-sec-sg"
+  name = "back-sec-sg"
   network_id = yandex_vpc_network.network1.id
   rules = [
     {
@@ -132,7 +132,7 @@ module "vms-sec-sg-create" {
       protocol       = "TCP"
       description    = "Разрешить SSH от бастионного хоста"
       v4_cidr_blocks = ["172.16.16.0/24"]
-      //security_group_id = "${module.bast-sec-sg-create.sg_id}"
+      //security_group_id = [module.bast-sec-sg-create.sg_id]
       port           = 22
     },
     {
@@ -141,55 +141,135 @@ module "vms-sec-sg-create" {
       description    = "Разрешить ping"
       v4_cidr_blocks = ["0.0.0.0/0"]
     },
+    // balancer
     {
       direction      = "ingress"
-      description    = "PostgreSQL subnet-a"
-      port           = 5432
       protocol       = "TCP"
-      v4_cidr_blocks = ["10.10.5.0/24"]
-    },
-    {
-      direction      = "ingress"
-      description    = "PostgreSQL subnet-b"
-      port           = 5432
-      protocol       = "TCP"
-      v4_cidr_blocks = ["10.10.6.0/24"]
-    },
-    {
-      direction      = "ingress"
-      description    = "PostgreSQL subnet-c"
-      port           = 5432
-      protocol       = "TCP"
-      v4_cidr_blocks = ["10.10.7.0/24"]
-    },
-    {
-      direction      = "ingress"
-      description    = "etcd1"
-      port           = 2379
-      protocol       = "TCP"
+      description    = "Balancer"
       v4_cidr_blocks = ["0.0.0.0/0"]
+      //security_group_id = "${module.ext-sec-sg-create.sg_id}"
+      port              = 80
     },
+    // 80
     {
       direction      = "ingress"
-      description    = "etcd2"
-      port           = 2380
-      protocol       = "TCP"
-      v4_cidr_blocks = ["0.0.0.0/0"]
-    },
-    {
-      direction      = "ingress"
-      description    = "patroni rest api"
-      port           = 8008
-      protocol       = "TCP"
-      v4_cidr_blocks = ["0.0.0.0/0"]
-    },
-    {
-      direction      = "ingress"
-      description    = "http"
+      description    = "allow http subnets"
       port           = 80
       protocol       = "TCP"
-      v4_cidr_blocks = ["0.0.0.0/0"]
-  }
+      v4_cidr_blocks = [
+        "10.10.5.0/24",
+        "10.10.6.0/24",
+        "10.10.7.0/24"
+      ]
+    },
+    // 3260
+    {
+      direction      = "ingress"
+      description    = "allow iscsi 3620 subnets"
+      port           = 3260
+      protocol       = "TCP"
+      v4_cidr_blocks = [
+        "10.10.5.0/24",
+        "10.10.6.0/24",
+        "10.10.7.0/24"
+      ]
+    },
+    // 2224
+    {
+      direction      = "ingress"
+      description    = "allow pcsd port subnets"
+      port           = 2224
+      protocol       = "TCP"
+      v4_cidr_blocks = [
+        "10.10.5.0/24",
+        "10.10.6.0/24",
+        "10.10.7.0/24"
+      ]
+    },
+    // 3121
+    {
+      direction      = "ingress"
+      description    = "allow crmd port subnets"
+      port           = 3121
+      protocol       = "TCP"
+      v4_cidr_blocks = [
+        "10.10.5.0/24",
+        "10.10.6.0/24",
+        "10.10.7.0/24"
+      ]
+    },
+    // 5403
+    {
+      direction      = "ingress"
+      description    = "allow corosync-qnetd subnets"
+      port           = 5403
+      protocol       = "TCP"
+      v4_cidr_blocks = [
+        "10.10.5.0/24",
+        "10.10.6.0/24",
+        "10.10.7.0/24"
+      ]
+    },
+    // 5404 UDP
+    {
+      direction      = "ingress"
+      description    = "allow corosync multicast-udp subnets"
+      port           = 5404
+      protocol       = "UDP"
+      v4_cidr_blocks = [
+        "10.10.5.0/24",
+        "10.10.6.0/24",
+        "10.10.7.0/24"
+      ]
+    },
+    // 5405 UDP
+    {
+      direction      = "ingress"
+      description    = "allow corosync subnets"
+      port           = 5405
+      protocol       = "UDP"
+      v4_cidr_blocks = [
+        "10.10.5.0/24",
+        "10.10.6.0/24",
+        "10.10.7.0/24"
+      ]
+    },
+    // 21064
+    {
+      direction      = "ingress"
+      description    = "allow CLVM subnets"
+      port           = 21064
+      protocol       = "TCP"
+      v4_cidr_blocks = [
+        "10.10.5.0/24",
+        "10.10.6.0/24",
+        "10.10.7.0/24"
+      ]
+    },
+    // 9929
+    {
+      direction      = "ingress"
+      description    = "allow booth ticket manager subnets"
+      port           = 9929
+      protocol       = "TCP"
+      v4_cidr_blocks = [
+        "10.10.5.0/24",
+        "10.10.6.0/24",
+        "10.10.7.0/24"
+      ]
+    },
+    // 9929 UDP
+    {
+      direction      = "ingress"
+      description    = "allow UDP booth ticket manager subnets"
+      port           = 9929
+      protocol       = "UDP"
+      v4_cidr_blocks = [
+        "10.10.5.0/24",
+        "10.10.6.0/24",
+        "10.10.7.0/24"
+      ]
+    },
      # predefined_target
   ]
 }
@@ -221,11 +301,163 @@ module "pgsql-sec-sg-create" {
     },
     {
       direction      = "ingress"
+      description    = "PostgreSQL subnets"
+      port           = 5432
       protocol       = "TCP"
-      description    = "PostgreSQL"
-      v4_cidr_blocks = ["0.0.0.0/0"]
-      port           = 6432
+      v4_cidr_blocks = [
+        "10.10.5.0/24",
+        "10.10.6.0/24",
+        "10.10.7.0/24"
+      ]
+    },
+
+    // 5432
+    # {
+    #   direction      = "ingress"
+    #   description    = "PostgreSQL subnet-b"
+    #   port           = 5432
+    #   protocol       = "TCP"
+    #   v4_cidr_blocks = ["10.10.6.0/24"]
+    # },
+    # {
+    #   direction      = "ingress"
+    #   description    = "PostgreSQL subnet-c"
+    #   port           = 5432
+    #   protocol       = "TCP"
+    #   v4_cidr_blocks = ["10.10.7.0/24"]
+    # },
+
+    // 2379
+    {
+      direction      = "ingress"
+      description    = "etcd1 subnets"
+      port           = 2379
+      protocol       = "TCP"
+      v4_cidr_blocks = [
+        "10.10.5.0/24",
+        "10.10.6.0/24",
+        "10.10.7.0/24"
+      ]
+    },
+    # {
+    #   direction      = "ingress"
+    #   description    = "etcd1 subnet-b"
+    #   port           = 2379
+    #   protocol       = "TCP"
+    #   v4_cidr_blocks = ["10.10.6.0/24"]
+    # },
+    # {
+    #   direction      = "ingress"
+    #   description    = "etcd1 subnet-c"
+    #   port           = 2379
+    #   protocol       = "TCP"
+    #   v4_cidr_blocks = ["10.10.7.0/24"]
+    # },
+
+    // 2380
+    {      
+      direction      = "ingress"
+      description    = "etcd2 subnets"
+      port           = 2380
+      protocol       = "TCP"
+      v4_cidr_blocks = [
+        "10.10.5.0/24",
+        "10.10.6.0/24",
+        "10.10.7.0/24"
+      ]
+    },
+    # {      
+    #   direction      = "ingress"
+    #   description    = "etcd2 subnet-b"
+    #   port           = 2380
+    #   protocol       = "TCP"
+    #   v4_cidr_blocks = ["10.10.6.0/24"]
+    # },
+    # {      
+    #   direction      = "ingress"
+    #   description    = "etcd2 subnet-c"
+    #   port           = 2380
+    #   protocol       = "TCP"
+    #   v4_cidr_blocks = ["10.10.7.0/24"]
+    # },
+
+    // 8008
+    {
+      direction      = "ingress"
+      description    = "patroni rest api subnet-a"
+      port           = 8008
+      protocol       = "TCP"
+      v4_cidr_blocks = [
+        "10.10.5.0/24",
+        "10.10.6.0/24",
+        "10.10.7.0/24"
+      ]
     }
+    # {
+    #   direction      = "ingress"
+    #   description    = "patroni rest api subnet-b"
+    #   port           = 8008
+    #   protocol       = "TCP"
+    #   v4_cidr_blocks = ["10.10.6.0/24"]
+    # },
+    # {
+    #   direction      = "ingress"
+    #   description    = "patroni rest api subnet-c"
+    #   port           = 8008
+    #   protocol       = "TCP"
+    #   v4_cidr_blocks = ["10.10.7.0/24"]
+    # }
+  ]
+}
+
+module "ext-sec-sg-create" {
+  source = "./modules/sg-create"
+  name = "ext-sec-sg"
+  network_id = yandex_vpc_network.network1.id
+  rules = [
+    {
+      direction      = "ingress"
+      protocol       = "TCP"
+      description    = "Разрешить SSH от бастионного хоста"
+      v4_cidr_blocks = ["172.16.16.0/24"]
+      port           = 22
+    },
+    {
+      direction      = "ingress"
+      protocol       = "ICMP"
+      description    = "Разрешить ping"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      direction      = "ingress"
+      protocol       = "TCP"
+      description    = "ext-http"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+      port           = 80
+    },
+    {
+      direction      = "ingress"
+      protocol       = "TCP"
+      description    = "ext-https"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+      port           = 443
+    },
+    {
+      direction      = "ingress"
+      protocol       = "TCP"
+      description    = "healthchecks"
+      v4_cidr_blocks = [
+        "198.18.235.0/24",
+        "198.18.248.0/24"
+        ]
+      port           = 30080
+    },
+    {
+      direction      = "egress"
+      protocol       = "ANY"
+      description    = "Разрешить весь исходящий трафик"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+     },
   ]
 }
 
@@ -248,23 +480,80 @@ module "bast-host" {
   sec-gr = [module.bast-sec-sg-create.sg_id]
 }
 
-module "web-host" {
+resource "yandex_compute_disk" "iscsi-disk" {
+  count     = 1
+  name       = "iscsi-disk-01"
+  type       = "network-hdd"
+  zone       = "ru-central1-a"
+  size       = 15
+}
+
+module "iscsi-srv" {
   source = "./modules/vm-create"
-  name = "web-host"
+  name = "iscsi-srv"
   platform = "standard-v1"
-  zone = "ru-central1-b"
-  hostname = "web-host"
+  zone = "ru-central1-a"
+  hostname = "iscsi-srv"
+  cpu = 2
+  ram = 2
+  core_fraction = 20
+  image_id = "fd81prb1447ilqb2mp3m"
+  disk_size = 10
+  sec_disk_id = {
+    for disk in yandex_compute_disk.iscsi-disk :
+    disk.name => {
+      disk_id = disk.id
+    }
+    if disk.name == "iscsi-disk-01"
+  }
+
+  subnetwork_id = yandex_vpc_subnet.subnet-a.id
+  nat = false
+  ip = "10.10.5.3"
+  sec-gr = [module.back-sec-sg-create.sg_id]
+}
+
+locals {
+  back_vms = [
+    {
+      name       = "back-host1"
+      zone       = "ru-central1-a"
+      subnetwork_id = "${yandex_vpc_subnet.subnet-a.id}"
+      ip_address = "10.10.5.10"
+    },
+    {
+      name       = "back-host2"
+      zone       = "ru-central1-b"
+      subnetwork_id = "${yandex_vpc_subnet.subnet-b.id}"
+      ip_address = "10.10.6.10"
+    },
+    {
+      name       = "back-host3"
+      zone       = "ru-central1-c"
+      subnetwork_id = "${yandex_vpc_subnet.subnet-c.id}"
+      ip_address = "10.10.7.10"
+    }
+  ]
+}
+
+module "back-hosts" {
+  for_each   = {for index, vm in local.back_vms:
+    vm.name => vm
+  }
+  source = "./modules/vm-create"
+  name = each.value.name
+  platform = "standard-v1"
+  zone = each.value.zone
+  hostname = each.value.name
   cpu = 2
   ram = 2
   image_id = "fd81prb1447ilqb2mp3m"
   disk_size = 10
   sec_disk_id = {}
   core_fraction = 20
-  subnetwork_id = yandex_vpc_subnet.subnet-b.id
-  nat = true
-  ip = "10.10.6.3"
-  nat-ip = var.web_nat_ip
-  sec-gr = [module.vms-sec-sg-create.sg_id]
+  subnetwork_id = each.value.subnetwork_id
+  ip = each.value.ip_address
+  sec-gr = [module.back-sec-sg-create.sg_id]
 }
 
 locals {
@@ -307,7 +596,102 @@ module "db-hosts" {
   core_fraction = 20
   subnetwork_id = each.value.subnetwork_id
   ip = each.value.ip_address
-  sec-gr = [module.vms-sec-sg-create.sg_id]
+  sec-gr = [module.pgsql-sec-sg-create.sg_id]
+}
+
+# # Creating a ALB
+
+resource "yandex_alb_target_group" "alb-tg" {
+  name           = "alb-tg"
+  target {
+    subnet_id    = yandex_vpc_subnet.subnet-a.id
+    ip_address   = "10.10.5.10"
+  }
+  target {
+    subnet_id    = yandex_vpc_subnet.subnet-b.id
+    ip_address   = "10.10.6.10"
+  }
+  target {
+    subnet_id    = yandex_vpc_subnet.subnet-c.id
+    ip_address   = "10.10.7.10"
+  }
+}
+
+resource "yandex_alb_backend_group" "alb-bg" {
+  name                     = "alb-bg"
+
+  http_backend {
+    name                   = "backend-1"
+    port                   = 80
+    target_group_ids       = [yandex_alb_target_group.alb-tg.id]
+    healthcheck {
+      timeout              = "10s"
+      interval             = "10s"
+      healthcheck_port     = 80
+      http_healthcheck {
+        path               = "/"
+      }
+    }
+  }
+}
+
+resource "yandex_alb_http_router" "alb-router" {
+  name   = "alb-router"
+}
+
+resource "yandex_alb_virtual_host" "alb-host" {
+  name           = "alb-host"
+  http_router_id = yandex_alb_http_router.alb-router.id
+  authority      = ["dip-akopalev.ru"]
+  route {
+    name = "route-1"
+    http_route {
+      http_route_action {
+        backend_group_id = yandex_alb_backend_group.alb-bg.id
+      }
+    }
+  }
+}
+
+resource "yandex_alb_load_balancer" "alb-1" {
+  name               = "alb-1"
+  network_id         = yandex_vpc_network.network1.id
+  security_group_ids = [module.ext-sec-sg-create.sg_id]
+
+  allocation_policy {
+    location {
+      zone_id   = "ru-central1-a"
+      subnet_id = yandex_vpc_subnet.subnet-a.id
+    }
+
+    location {
+      zone_id   = "ru-central1-b"
+      subnet_id = yandex_vpc_subnet.subnet-b.id
+    }
+
+    location {
+      zone_id   = "ru-central1-c"
+      subnet_id = yandex_vpc_subnet.subnet-c.id
+    }
+
+  }
+
+  listener {
+    name = "alb-listener"
+    endpoint {
+      address {
+        external_ipv4_address {
+          address = var.web_nat_ip
+        }
+      }
+      ports = [ 80 ]
+    }
+    http {
+      handler {
+        http_router_id = yandex_alb_http_router.alb-router.id
+      }
+    }
+  }
 }
 
 # Creating a Cloud DNS zone

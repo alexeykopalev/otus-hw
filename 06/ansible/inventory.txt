@@ -1,7 +1,13 @@
 
-[backend_hosts]
-backend1 ansible_host=10.10.6.3 ansible_user=akopalev
-[backend_hosts:vars]
+[iscsi_srvs]
+iscsi_srv   ansible_host=10.10.5.3   ansible_user=akopalev
+[iscsi_srvs:vars]
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q bastion"'
+[back_hosts]
+back-host1 ansible_host=10.10.5.10 ansible_user=akopalev
+back-host2 ansible_host=10.10.6.10 ansible_user=akopalev
+back-host3 ansible_host=10.10.7.10 ansible_user=akopalev
+[back_hosts:vars]
 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q bastion"'
 [db_hosts]
 db-host1 ansible_host=10.10.5.4 ansible_user=akopalev

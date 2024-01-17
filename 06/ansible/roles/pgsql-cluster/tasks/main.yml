@@ -1,204 +1,183 @@
-- name: Put SELinux in permissive mode, logging actions that would be blocked.
-  ansible.posix.selinux:
-    policy: targeted
-    state: permissive
+# - name: Put SELinux in permissive mode, logging actions that would be blocked.
+#   ansible.posix.selinux:
+#     policy: targeted
+#     state: permissive
 
-- name: Install support apps
-  ansible.builtin.dnf:
-    name:
-      - git
-      - nano 
-      - telnet
-    state: latest
+# - name: Install support apps
+#   ansible.builtin.dnf:
+#     name:
+#       - git
+#       - nano 
+#       - telnet
+#     state: latest
 
-- name: Import PostgreSQL Repository KEY
-  ansible.builtin.rpm_key:
-    state: present
-    key: https://download.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-RHEL
+# - name: Import PostgreSQL Repository KEY
+#   ansible.builtin.rpm_key:
+#     state: present
+#     key: https://download.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-RHEL
 
-- name: Installing PostgreSQL Repository
-  ansible.builtin.yum:
-    name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-    state: latest
-    update_cache: yes
+# - name: Installing PostgreSQL Repository
+#   ansible.builtin.yum:
+#     name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+#     state: latest
+#     update_cache: yes
 
-- name: Install 'dnf-command(config-manager)'
-  ansible.builtin.dnf:
-      name:
-        - 'dnf-command(config-manager)'
-      state: latest
+# - name: Install 'dnf-command(config-manager)'
+#   ansible.builtin.dnf:
+#       name:
+#         - 'dnf-command(config-manager)'
+#       state: latest
 
-  # dnf config-manager --enable pgdg-rhel8-extras && \
-  # dnf -y install etcd
-- name: Install etcd
-  ansible.builtin.dnf:
-      name:
-        - etcd
-      state: latest
-      enablerepo: pgdg-rhel8-extras
+#   # dnf config-manager --enable pgdg-rhel8-extras && \
+#   # dnf -y install etcd
+# - name: Install etcd
+#   ansible.builtin.dnf:
+#       name:
+#         - etcd
+#       state: latest
+#       enablerepo: pgdg-rhel8-extras
 
-- name: Check etcd.conf.old
-  ansible.builtin.stat:
-    path: /etc/etcd/etcd.conf.old
-  register: result
-
-- name: Backup config file /etc/etcd/etcd.conf to /etc/etcd/etcd.conf.old
-  ansible.builtin.copy:
-    src: /etc/etcd/etcd.conf
-    dest: /etc/etcd/etcd.conf.old
-    remote_src: true
-  when: not result.stat.exists
-
-- name: Copy /etc/etcd/etcd.conf
-  ansible.builtin.template:
-    src: etcd.conf.j2
-    dest: /etc/etcd/etcd.conf
-    owner: root
-    group: root
-    mode: '0644'
-  when: not result.stat.exists
-
-# systemctl start etcd
-- name: Start etcd
-  ansible.builtin.service:
-    name: etcd
-    state: restarted
-    enabled: true
-
-- name: Disable the built-in PostgreSQL module
-  ansible.builtin.command: "{{ item }}"
-  with_items: 
-    - dnf -qy module disable postgresql
-
-- name: Install PostgreSQL-14
-  ansible.builtin.dnf:
-    name:
-      - postgresql14-server
-      - postgresql14-contrib
-    state: latest
-
-- name: Install python3 python3-devel python3-pip gcc
-  ansible.builtin.dnf:
-    name:
-      - python3 
-      - python3-devel 
-      - python3-pip 
-      - gcc
-    state: present
-
-- name: Install testresources, setuptools --upgrade
-  ansible.builtin.pip:
-      name:
-        - testresources
-        - setuptools
-      extra_args: --upgrade
-      executable: pip3
-
-  # dnf -y install python3-psycopg2 python3-etcd
-- name: Install psycopg2 python3-etcd
-  ansible.builtin.dnf:
-      name:
-        - python3-psycopg2
-        - python3-etcd
-      state: latest
-
-- name: Install EPEL release
-  ansible.builtin.dnf:
-      name: epel-release
-      state: present
-
-  # dnf -y install patroni patroni-etcd watchdog
-- name: Install patroni patroni-etcd watchdog
-  ansible.builtin.dnf:
-      name:
-        - patroni 
-        - patroni-etcd 
-        - watchdog
-      state: latest
-
-- name: Create a directory /etc/patroni, if it does not exist
-  ansible.builtin.file:
-    path: /etc/patroni
-    state: directory
-
-# cp -p /usr/share/doc/patroni/postgres0.yml /etc/patroni/patroni.yml
-- name: Copy /usr/share/doc/patroni/postgres0.yml to /etc/patroni/patroni.yml and backup file
-  ansible.builtin.copy:
-    src: /usr/share/doc/patroni/postgres0.yml
-    dest: "/etc/patroni/{{ item }}"
-    remote_src: true
-  loop: 
-    - patroni.yml
-    - patroni.yml.old
-
-- name: Copy /etc/patroni/patroni.yml
-  ansible.builtin.template:
-    src: patroni.yml.j2
-    dest: /etc/patroni/patroni.yml
-    owner: root
-    group: root
-    mode: '0644'
-
-# systemctl start patroni
-- name: Start patroni
-  ansible.builtin.service:
-    name: patroni
-    state: restarted
-    enabled: true
-
-
-#####################################################################################################################
-
-# - name: Check if Database is initialized
+# - name: Check etcd.conf.old
 #   ansible.builtin.stat:
-#     path: /var/lib/pgsql/14/data/pg_hba.conf
+#     path: /etc/etcd/etcd.conf.old
 #   register: result
 
-# - name: Initialize the database
-#   ansible.builtin.shell: /usr/pgsql-14/bin/postgresql-14-setup initdb
+# - name: Backup config file /etc/etcd/etcd.conf to /etc/etcd/etcd.conf.old
+#   ansible.builtin.copy:
+#     src: /etc/etcd/etcd.conf
+#     dest: /etc/etcd/etcd.conf.old
+#     remote_src: true
 #   when: not result.stat.exists
 
-# - name: Template a file to /var/lib/pgsql/14/data/pg_hba.conf
+# - name: Copy /etc/etcd/etcd.conf
 #   ansible.builtin.template:
-#     src: pg_hba.conf.j2
-#     dest: /var/lib/pgsql/14/data/pg_hba.conf
-#     owner: postgres
-#     group: postgres
-#     mode: '0600'
-#   run_once: true
+#     src: etcd.conf.j2
+#     dest: /etc/etcd/etcd.conf
+#     owner: root
+#     group: root
+#     mode: '0644'
+#   when: not result.stat.exists
 
-# - name: Template a file to /var/lib/pgsql/14/data/postgresql.conf
-#   ansible.builtin.template:
-#     src: postgresql.conf.j2
-#     dest: /var/lib/pgsql/14/data/postgresql.conf
-#     owner: postgres
-#     group: postgres
-#     mode: '0600'
-#   run_once: true
-
-# - name: Start the database service
+# # systemctl start etcd
+# - name: Start etcd
 #   ansible.builtin.service:
-#     name: postgresql-14
-#     state: started
+#     name: etcd
+#     state: restarted
+#     enabled: true
 
-# - name: Create a database for wordpress
-#   community.postgresql.postgresql_db:
-#     name: '{{ db_name }}'
-#   become_user: postgres
+# - name: Disable the built-in PostgreSQL module
+#   ansible.builtin.command: "{{ item }}"
+#   with_items: 
+#     - dnf -qy module disable postgresql
 
-# - name: create a user with super prvileges
-#   community.postgresql.postgresql_user:
-#     #db: '{{ db_name }}'
-#     name: '{{ db_user }}'
-#     password: '{{ db_pass }}'
-# #    role_attr_flags: LOGIN
-#   become_user: postgres
+# - name: Install PostgreSQL-14
+#   ansible.builtin.dnf:
+#     name:
+#       - postgresql14-server
+#       - postgresql14-contrib
+#     state: latest
 
-# - name: GRANT ALL PRIVILEGES ON DATABASE
-#   community.postgresql.postgresql_privs:
-#     db: '{{ db_name }}'
-#     privs: ALL
-#     type: database
-#     role: '{{ db_user }}'
-#   become_user: postgres
+# - name: Install python3 python3-devel python3-pip gcc
+#   ansible.builtin.dnf:
+#     name:
+#       - python3 
+#       - python3-devel 
+#       - python3-pip 
+#       - gcc
+#     state: present
+
+# - name: Install testresources, setuptools --upgrade
+#   ansible.builtin.pip:
+#       name:
+#         - testresources
+#         - setuptools
+#       extra_args: --upgrade
+#       executable: pip3
+
+#   # dnf -y install python3-psycopg2 python3-etcd
+# - name: Install psycopg2 python3-etcd
+#   ansible.builtin.dnf:
+#       name:
+#         - python3-psycopg2
+#         - python3-etcd
+#       state: latest
+
+# - name: Install EPEL release
+#   ansible.builtin.dnf:
+#       name: epel-release
+#       state: present
+
+#   # dnf -y install patroni patroni-etcd watchdog
+# - name: Install patroni patroni-etcd watchdog
+#   ansible.builtin.dnf:
+#       name:
+#         - patroni 
+#         - patroni-etcd 
+#         - watchdog
+#       state: latest
+
+# - name: Create a directory /etc/patroni, if it does not exist
+#   ansible.builtin.file:
+#     path: /etc/patroni
+#     state: directory
+
+# # cp -p /usr/share/doc/patroni/postgres0.yml /etc/patroni/patroni.yml
+# - name: Copy /usr/share/doc/patroni/postgres0.yml to /etc/patroni/patroni.yml and backup file
+#   ansible.builtin.copy:
+#     src: /usr/share/doc/patroni/postgres0.yml
+#     dest: "/etc/patroni/{{ item }}"
+#     remote_src: true
+#   loop: 
+#     - patroni.yml
+#     - patroni.yml.old
+
+# - name: Copy /etc/patroni/patroni.yml
+#   ansible.builtin.template:
+#     src: patroni.yml.j2
+#     dest: /etc/patroni/patroni.yml
+#     owner: root
+#     group: root
+#     mode: '0644'
+
+# # systemctl start patroni
+# - name: Start patroni
+#   ansible.builtin.service:
+#     name: patroni
+#     state: restarted
+#     enabled: true
+
+###############################
+
+- name: Create a database for wordpress
+  community.postgresql.postgresql_db:
+    name: '{{ db_name }}'
+    login_user: "postgres"
+    login_password: "zalando"
+    login_host: "10.10.7.4"
+  become_user: postgres
+  when: inventory_hostname == play_hosts[2]
+
+- name: create a user with super prvileges
+  community.postgresql.postgresql_user:
+    #db: '{{ db_name }}'
+    name: '{{ db_user }}'
+    password: '{{ db_pass }}'
+    login_user: "postgres"
+    login_password: "zalando"
+    login_host: "10.10.7.4"
+#    role_attr_flags: LOGIN
+  become_user: postgres
+  when: inventory_hostname == play_hosts[2]
+
+- name: GRANT ALL PRIVILEGES ON DATABASE
+  community.postgresql.postgresql_privs:
+    db: '{{ db_name }}'
+    privs: ALL
+    type: database
+    role: '{{ db_user }}'
+    login_user: "postgres"
+    login_password: "zalando"
+    login_host: "10.10.7.4"
+  become_user: postgres
+  when: inventory_hostname == play_hosts[2]
 
