@@ -1,38 +1,38 @@
 ---
-# - name: Install Chrony
-#   hosts: all
-#   gather_facts: false
-#   become: true
-#   roles:
-#   - chrony
+- name: Install Chrony
+  hosts: all
+  gather_facts: false
+  become: true
+  roles:
+  - chrony
 
-# - name: install targetcli, create lun
-#   hosts: iscsi_srv
-#   gather_facts: false
-#   become: yes
-#   roles:
-#   - targetcli
+- name: install targetcli, create lun
+  hosts: iscsi_srv
+  gather_facts: false
+  become: yes
+  roles:
+  - targetcli
 
-# - name: install iscsi-client
-#   hosts: back_hosts
-#   gather_facts: false
-#   become: yes
-#   roles:
-#   - iscsi-client
+- name: install iscsi-client
+  hosts: back_hosts
+  gather_facts: false
+  become: yes
+  roles:
+  - iscsi-client
 
-# - name: install ha-cluster
-#   hosts: back_hosts
-#   gather_facts: false
-#   become: yes
-#   roles:
-#   - ha-cluster
+- name: install ha-cluster
+  hosts: back_hosts
+  gather_facts: false
+  become: yes
+  roles:
+  - ha-cluster
 
-# - name: install pgsql cluster
-#   hosts: db_hosts
-#   #gather_facts: false
-#   become: yes
-#   roles:
-#   - pgsql-cluster
+- name: install pgsql cluster
+  hosts: db_hosts
+  #gather_facts: false
+  become: yes
+  roles:
+  - pgsql-cluster
 
 - name: install-wordpress
   hosts: back_hosts
