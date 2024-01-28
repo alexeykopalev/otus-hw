@@ -150,6 +150,8 @@ module "back-sec-sg-create" {
       //security_group_id = "${module.ext-sec-sg-create.sg_id}"
       port              = 80
     },
+
+    //6432
     {
       direction      = "ingress"
       description    = "balancer helpcheck"
@@ -320,6 +322,8 @@ module "pgsql-sec-sg-create" {
       v4_cidr_blocks = ["172.16.16.0/24"]
       port           = 22
     },
+
+    // 5432
     {
       direction      = "ingress"
       description    = "PostgreSQL subnets"
@@ -331,22 +335,6 @@ module "pgsql-sec-sg-create" {
         "10.10.7.0/24"
       ]
     },
-
-    // 5432
-    # {
-    #   direction      = "ingress"
-    #   description    = "PostgreSQL subnet-b"
-    #   port           = 5432
-    #   protocol       = "TCP"
-    #   v4_cidr_blocks = ["10.10.6.0/24"]
-    # },
-    # {
-    #   direction      = "ingress"
-    #   description    = "PostgreSQL subnet-c"
-    #   port           = 5432
-    #   protocol       = "TCP"
-    #   v4_cidr_blocks = ["10.10.7.0/24"]
-    # },
 
     // 2379
     {
@@ -360,20 +348,6 @@ module "pgsql-sec-sg-create" {
         "10.10.7.0/24"
       ]
     },
-    # {
-    #   direction      = "ingress"
-    #   description    = "etcd1 subnet-b"
-    #   port           = 2379
-    #   protocol       = "TCP"
-    #   v4_cidr_blocks = ["10.10.6.0/24"]
-    # },
-    # {
-    #   direction      = "ingress"
-    #   description    = "etcd1 subnet-c"
-    #   port           = 2379
-    #   protocol       = "TCP"
-    #   v4_cidr_blocks = ["10.10.7.0/24"]
-    # },
 
     // 2380
     {      
@@ -387,20 +361,6 @@ module "pgsql-sec-sg-create" {
         "10.10.7.0/24"
       ]
     },
-    # {      
-    #   direction      = "ingress"
-    #   description    = "etcd2 subnet-b"
-    #   port           = 2380
-    #   protocol       = "TCP"
-    #   v4_cidr_blocks = ["10.10.6.0/24"]
-    # },
-    # {      
-    #   direction      = "ingress"
-    #   description    = "etcd2 subnet-c"
-    #   port           = 2380
-    #   protocol       = "TCP"
-    #   v4_cidr_blocks = ["10.10.7.0/24"]
-    # },
 
     // 8008
     {
@@ -414,24 +374,6 @@ module "pgsql-sec-sg-create" {
         "10.10.7.0/24"
       ]
     },
-
-    # 198.18.235.0/2
-    # 198.18.248.0/24
-
-    # {
-    #   direction      = "ingress"
-    #   description    = "patroni rest api subnet-b"
-    #   port           = 8008
-    #   protocol       = "TCP"
-    #   v4_cidr_blocks = ["10.10.6.0/24"]
-    # },
-    # {
-    #   direction      = "ingress"
-    #   description    = "patroni rest api subnet-c"
-    #   port           = 8008
-    #   protocol       = "TCP"
-    #   v4_cidr_blocks = ["10.10.7.0/24"]
-    # }
   ]
 }
 
@@ -624,164 +566,177 @@ module "db-hosts" {
   sec-gr = [module.pgsql-sec-sg-create.sg_id]
 }
 
-# resource "yandex_lb_target_group" "keepalived_group" {
-#   name      = "keepalived-group"
-#   region_id = "ru-central1"
-#   folder_id = yandex_resourcemanager_folder.folders["lab-folder"].id
+resource "yandex_lb_target_group" "db-tg" {
+  name      = "db-tg"
+  region_id = "ru-central1"
+  //folder_id = yandex_resourcemanager_folder.folders["lab-folder"].id
 
-#   dynamic "target" {
-#     for_each = data.yandex_compute_instance.nginx-servers[*].network_interface.0.ip_address
-#     content {
-#       subnet_id = yandex_vpc_subnet.subnets["lab-subnet"].id
-#       address   = target.value
-#     }
-#   }
-# }
+  target {
+    subnet_id = "${yandex_vpc_subnet.subnet-a.id}"
+    address   = "10.10.5.10"
+  }
+  target {
+    subnet_id = "${yandex_vpc_subnet.subnet-b.id}"
+    address   = "10.10.6.10"
+  }
+  target {
+    subnet_id = "${yandex_vpc_subnet.subnet-c.id}"
+    address   = "10.10.7.10"
+  }
+  # dynamic "target" {
+  #   for_each = data.yandex_compute_instance.nginx-servers[*].network_interface.0.ip_address
+  #   content {
+  #     subnet_id = yandex_vpc_subnet.subnets["lab-subnet"].id
+  #     address   = target.value
+  #   }
+  # }
+}
 
-# resource "yandex_lb_network_load_balancer" "keepalived" {
-#   name = "network-load-balancer"
-#   folder_id = yandex_resourcemanager_folder.folders["lab-folder"].id
+resource "yandex_lb_network_load_balancer" "db-nlb" {
+  name = "db-nlb"
+  type = "internal"
 
-#   listener {
-#     name = "http-listener"
-#     port = 80
-#     external_address_spec {
-#       ip_version = "ipv4"
-#     }
-#   }
-  
-#   attached_target_group {
-#     target_group_id = yandex_lb_target_group.keepalived_group.id
+  listener {
+    name = "my-listener"
+    port = 6432
+    internal_address_spec {
+      subnet_id = yandex_vpc_subnet.subnet-a.id
+      ip_version = "ipv4"
+      address = "10.10.5.5"
+    }
+  }
 
-#     healthcheck {
-#       name = "http"
-#       http_options {
-#         port = 80
-#         path = "/ping"
-#       }
-#     }
-#   }
-# }
+  attached_target_group {
+    target_group_id = "${yandex_lb_target_group.db-tg.id}"
 
-# # Creating a ALB
+    healthcheck {
+      name = "tcp-6432"
+      tcp_options {
+        port = 6432
+      }
+    }
+  }
+}
 
-# resource "yandex_alb_target_group" "alb-tg" {
-#   name           = "alb-tg"
-#   target {
-#     subnet_id    = yandex_vpc_subnet.subnet-a.id
-#     ip_address   = "10.10.5.10"
-#   }
-#   target {
-#     subnet_id    = yandex_vpc_subnet.subnet-b.id
-#     ip_address   = "10.10.6.10"
-#   }
-#   target {
-#     subnet_id    = yandex_vpc_subnet.subnet-c.id
-#     ip_address   = "10.10.7.10"
-#   }
-# }
+# Creating a ALB
 
-# resource "yandex_alb_backend_group" "alb-bg" {
-#   name                     = "alb-bg"
+resource "yandex_alb_target_group" "alb-tg" {
+  name           = "alb-tg"
+  target {
+    subnet_id    = yandex_vpc_subnet.subnet-a.id
+    ip_address   = "10.10.5.10"
+  }
+  target {
+    subnet_id    = yandex_vpc_subnet.subnet-b.id
+    ip_address   = "10.10.6.10"
+  }
+  target {
+    subnet_id    = yandex_vpc_subnet.subnet-c.id
+    ip_address   = "10.10.7.10"
+  }
+}
 
-#   http_backend {
-#     name                   = "backend-1"
-#     port                   = 80
-#     target_group_ids       = [yandex_alb_target_group.alb-tg.id]
-#     healthcheck {
-#       timeout              = "10s"
-#       interval             = "10s"
-#       healthcheck_port     = 80
-#       http_healthcheck {
-#         path               = "/"
-#       }
-#     }
-#   }
-# }
+resource "yandex_alb_backend_group" "alb-bg" {
+  name                     = "alb-bg"
 
-# resource "yandex_alb_http_router" "alb-router" {
-#   name   = "alb-router"
-# }
+  http_backend {
+    name                   = "backend-1"
+    port                   = 80
+    target_group_ids       = [yandex_alb_target_group.alb-tg.id]
+    healthcheck {
+      timeout              = "10s"
+      interval             = "10s"
+      healthcheck_port     = 80
+      http_healthcheck {
+        path               = "/"
+      }
+    }
+  }
+}
 
-# resource "yandex_alb_virtual_host" "alb-host" {
-#   name           = "alb-host"
-#   http_router_id = yandex_alb_http_router.alb-router.id
-#   authority      = ["dip-akopalev.ru"]
-#   route {
-#     name = "route-1"
-#     http_route {
-#       http_route_action {
-#         backend_group_id = yandex_alb_backend_group.alb-bg.id
-#       }
-#     }
-#   }
-# }
+resource "yandex_alb_http_router" "alb-router" {
+  name   = "alb-router"
+}
 
-# resource "yandex_alb_load_balancer" "alb-1" {
-#   name               = "alb-1"
-#   network_id         = yandex_vpc_network.network1.id
-#   security_group_ids = [module.ext-sec-sg-create.sg_id]
+resource "yandex_alb_virtual_host" "alb-host" {
+  name           = "alb-host"
+  http_router_id = yandex_alb_http_router.alb-router.id
+  authority      = ["dip-akopalev.ru"]
+  route {
+    name = "route-1"
+    http_route {
+      http_route_action {
+        backend_group_id = yandex_alb_backend_group.alb-bg.id
+      }
+    }
+  }
+}
 
-#   allocation_policy {
-#     location {
-#       zone_id   = "ru-central1-a"
-#       subnet_id = yandex_vpc_subnet.subnet-a.id
-#     }
+resource "yandex_alb_load_balancer" "alb-1" {
+  name               = "alb-1"
+  network_id         = yandex_vpc_network.network1.id
+  security_group_ids = [module.ext-sec-sg-create.sg_id]
 
-#     location {
-#       zone_id   = "ru-central1-b"
-#       subnet_id = yandex_vpc_subnet.subnet-b.id
-#     }
+  allocation_policy {
+    location {
+      zone_id   = "ru-central1-a"
+      subnet_id = yandex_vpc_subnet.subnet-a.id
+    }
 
-#     location {
-#       zone_id   = "ru-central1-c"
-#       subnet_id = yandex_vpc_subnet.subnet-c.id
-#     }
+    location {
+      zone_id   = "ru-central1-b"
+      subnet_id = yandex_vpc_subnet.subnet-b.id
+    }
 
-#   }
+    location {
+      zone_id   = "ru-central1-c"
+      subnet_id = yandex_vpc_subnet.subnet-c.id
+    }
 
-#   listener {
-#     name = "alb-listener"
-#     endpoint {
-#       address {
-#         external_ipv4_address {
-#           address = var.web_nat_ip
-#         }
-#       }
-#       ports = [ 80 ]
-#     }
-#     http {
-#       handler {
-#         http_router_id = yandex_alb_http_router.alb-router.id
-#       }
-#     }
-#   }
-# }
+  }
 
-# # Creating a Cloud DNS zone
+  listener {
+    name = "alb-listener"
+    endpoint {
+      address {
+        external_ipv4_address {
+          address = var.web_nat_ip
+        }
+      }
+      ports = [ 80 ]
+    }
+    http {
+      handler {
+        http_router_id = yandex_alb_http_router.alb-router.id
+      }
+    }
+  }
+}
 
-# resource "yandex_dns_zone" "joomla-pg" {
-#   name    = local.dns_zone_name
-#   zone    = var.dns_zone
-#   public  = true
-# }
+# Creating a Cloud DNS zone
 
-# # Creating a DNS A record
+resource "yandex_dns_zone" "joomla-pg" {
+  name    = local.dns_zone_name
+  zone    = var.dns_zone
+  public  = true
+}
 
-# resource "yandex_dns_recordset" "joomla-pg-a" {
-#   zone_id = yandex_dns_zone.joomla-pg.id
-#   name    = var.dns_recordset_name
-#   type    = "A"
-#   ttl     = 600
-#   data    = [ var.web_nat_ip ]
-# }
+# Creating a DNS A record
 
-# # Creating a DNS CNAME record
+resource "yandex_dns_recordset" "joomla-pg-a" {
+  zone_id = yandex_dns_zone.joomla-pg.id
+  name    = var.dns_recordset_name
+  type    = "A"
+  ttl     = 600
+  data    = [ var.web_nat_ip ]
+}
 
-# resource "yandex_dns_recordset" "joomla-pg-cname" {
-#   zone_id = yandex_dns_zone.joomla-pg.id
-#   name    = "www"
-#   type    = "CNAME"
-#   ttl     = 600
-#   data    = [ var.dns_zone ]
-# }
+# Creating a DNS CNAME record
+
+resource "yandex_dns_recordset" "joomla-pg-cname" {
+  zone_id = yandex_dns_zone.joomla-pg.id
+  name    = "www"
+  type    = "CNAME"
+  ttl     = 600
+  data    = [ var.dns_zone ]
+}

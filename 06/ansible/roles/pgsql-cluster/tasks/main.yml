@@ -151,7 +151,7 @@
     name: '{{ db_name }}'
     login_user: "postgres"
     login_password: "zalando"
-    login_host: "10.10.7.11"
+    login_host: "10.10.5.5"
     port: 6432
   become_user: postgres
   run_once: true
@@ -163,7 +163,7 @@
     password: '{{ db_pass }}'
     login_user: "postgres"
     login_password: "zalando"
-    login_host: "10.10.7.11"
+    login_host: "10.10.5.5"
     port: 6432
 #    role_attr_flags: LOGIN
   become_user: postgres
@@ -177,7 +177,7 @@
     role: '{{ db_user }}'
     login_user: "postgres"
     login_password: "zalando"
-    login_host: "10.10.7.11"
+    login_host: "10.10.5.5"
     port: 6432
   become_user: postgres
   run_once: true
