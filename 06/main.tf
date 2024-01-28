@@ -517,7 +517,7 @@ module "back-hosts" {
   image_id = "fd81prb1447ilqb2mp3m"
   disk_size = 10
   sec_disk_id = {}
-  core_fraction = 20
+  core_fraction = 100
   subnetwork_id = each.value.subnetwork_id
   ip = each.value.ip_address
   sec-gr = [module.back-sec-sg-create.sg_id]

@@ -146,6 +146,11 @@
     state: restarted
     enabled: true
 
+- name: "Pause"
+  ansible.builtin.pause:
+    seconds: 20
+  run_once: true
+
 - name: Create a database for wordpress
   community.postgresql.postgresql_db:
     name: '{{ db_name }}'
