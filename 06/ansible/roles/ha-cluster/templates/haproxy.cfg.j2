@@ -17,9 +17,9 @@ listen stats
 
 listen postgres
     bind *:6432
-    option httpchk OPTIONS /master
+    option httpchk
     http-check expect status 200
     default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
-    server db-host1 db-host1:5432 maxconn 100 check port 8008
-    server db-host2 db-host2:5432 maxconn 100 check port 8008
-    server db-host3 db-host3:5432 maxconn 100 check port 8008
+    server db-host1 10.10.5.4:5432 maxconn 100 check port 8008
+    server db-host2 10.10.6.4:5432 maxconn 100 check port 8008
+    server db-host3 10.10.7.4:5432 maxconn 100 check port 8008

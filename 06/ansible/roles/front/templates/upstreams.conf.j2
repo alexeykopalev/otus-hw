@@ -1,0 +1,16 @@
+upstream backend {
+        server 10.10.5.10:80 max_fails=2 fail_timeout=90s;
+        server 10.10.6.10:80 max_fails=2 fail_timeout=90s;
+        server 10.10.7.10:80 max_fails=2 fail_timeout=90s;
+}
+
+server {
+    listen 80;
+    server_name dip-akopalev.ru www.dip-akopalev.ru;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://backend;
+        proxy_redirect off;
+    }
+}

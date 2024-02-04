@@ -1,0 +1,66 @@
+- name: Put SELinux in permissive mode, logging actions that would be blocked.
+  ansible.posix.selinux:
+    policy: targeted
+    state: permissive
+
+- name: Installing Nginx Repository
+  ansible.builtin.yum_repository:
+    name: nginx-stable
+    description: nginx stable repo
+    file: nginx
+    baseurl: http://nginx.org/packages/centos/$releasever/$basearch/
+    gpgkey: https://nginx.org/keys/nginx_signing.key
+    gpgcheck: yes
+    enabled: yes
+    module_hotfixes: true
+
+- name: install Nginx
+  ansible.builtin.dnf:
+    name: 
+      - nginx
+      - haproxy
+      - nano
+      - telnet
+    state: latest
+
+- name: Check exist proxy_params 
+  ansible.builtin.stat:
+    path: /etc/nginx/proxy_params
+  register: result_proxy_params
+
+- name: Copy proxy_params
+  ansible.builtin.copy:
+    src: files/proxy_params
+    dest: /etc/nginx/proxy_params
+  when: not result_proxy_params.stat.exists
+
+- name: Template nginx config files
+  ansible.builtin.template:
+      src: upstreams.conf.j2
+      dest: /etc/nginx/conf.d/upstreams.conf
+
+- name: Start Nginx Service
+  ansible.builtin.systemd:
+    name: nginx
+    state: restarted
+    enabled: yes
+
+# # cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.backup
+# - name: Backup default haproxy config file
+#   ansible.builtin.copy:
+#     src: /etc/haproxy/haproxy.cfg
+#     dest: /etc/haproxy/haproxy.cfg.backup
+#     remote_src: true
+
+# # copy haproxy/haproxy.cfg.j2 /etc/haproxy/haproxy.cfg
+# - name: Template custom haproxy config file
+#   ansible.builtin.template:
+#     src: haproxy.cfg.j2
+#     dest: /etc/haproxy/haproxy.cfg
+
+# # systemctl enable haproxy --now
+# - name: "Start and enable haproxy service"
+#   ansible.builtin.service:
+#     name: haproxy
+#     state: restarted
+#     enabled: true

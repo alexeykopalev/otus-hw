@@ -1,3 +1,4 @@
+
 [iscsi_srvs]
 iscsi_srv   ansible_host=10.10.5.3   ansible_user=akopalev
 [iscsi_srvs:vars]

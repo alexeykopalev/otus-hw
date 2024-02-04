@@ -40,3 +40,10 @@
   become: yes
   roles:
   - wordpress
+
+- name: install-proxy
+  hosts: front_hosts
+  gather_facts: false
+  become: yes
+  roles:
+  - front

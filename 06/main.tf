@@ -174,6 +174,14 @@ module "back-sec-sg-create" {
         "10.10.7.0/24"
       ]
     },
+    # 7000
+    {
+      direction      = "ingress"
+      description    = "allow 7000 subnets"
+      port           = 7000
+      protocol       = "TCP"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+    },
     // 3260
     {
       direction      = "ingress"
@@ -282,6 +290,8 @@ module "back-sec-sg-create" {
         "10.10.7.0/24"
       ]
     },
+
+    // 6432
     {
       direction      = "ingress"
       description    = "6432"
@@ -420,6 +430,24 @@ module "ext-sec-sg-create" {
       port           = 30080
     },
     {
+      direction      = "ingress"
+      protocol       = "TCP"
+      description    = "healthchecks"
+      v4_cidr_blocks = [
+        "198.18.235.0/24",
+        "198.18.248.0/24"
+        ]
+      port           = 80
+    },
+    # 7000
+    {
+      direction      = "ingress"
+      description    = "allow 7000 subnets"
+      port           = 7000
+      protocol       = "TCP"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
       direction      = "egress"
       protocol       = "ANY"
       description    = "Разрешить весь исходящий трафик"
@@ -478,6 +506,51 @@ module "iscsi-srv" {
   nat = false
   ip = "10.10.5.3"
   sec-gr = [module.back-sec-sg-create.sg_id]
+}
+
+locals {
+  front_vms = [
+    # {
+    #   name       = "front-host1"
+    #   zone       = "ru-central1-a"
+    #   subnetwork_id = "${yandex_vpc_subnet.subnet-a.id}"
+    #   ip_address = "10.10.5.6"
+    # },
+    {
+      name       = "front-host2"
+      zone       = "ru-central1-b"
+      subnetwork_id = "${yandex_vpc_subnet.subnet-b.id}"
+      ip_address = "10.10.6.6"
+    },
+    # {
+    #   name       = "front-host3"
+    #   zone       = "ru-central1-c"
+    #   subnetwork_id = "${yandex_vpc_subnet.subnet-c.id}"
+    #   ip_address = "10.10.7.6"
+    # }
+  ]
+}
+
+module "front-hosts" {
+  for_each   = {for index, vm in local.front_vms:
+    vm.name => vm
+  }
+  source = "./modules/vm-create"
+  name = each.value.name
+  platform = "standard-v1"
+  zone = each.value.zone
+  hostname = each.value.name
+  cpu = 2
+  ram = 2
+  image_id = "fd81prb1447ilqb2mp3m"
+  disk_size = 10
+  sec_disk_id = {}
+  core_fraction = 100
+  subnetwork_id = each.value.subnetwork_id
+  ip = each.value.ip_address
+  nat = true
+  nat-ip = var.web_nat_ip
+  sec-gr = [module.ext-sec-sg-create.sg_id]
 }
 
 locals {
@@ -560,7 +633,7 @@ module "db-hosts" {
   image_id = "fd81prb1447ilqb2mp3m"
   disk_size = 10
   sec_disk_id = {}
-  core_fraction = 20
+  core_fraction = 100
   subnetwork_id = each.value.subnetwork_id
   ip = each.value.ip_address
   sec-gr = [module.pgsql-sec-sg-create.sg_id]
@@ -583,13 +656,6 @@ resource "yandex_lb_target_group" "db-tg" {
     subnet_id = "${yandex_vpc_subnet.subnet-c.id}"
     address   = "10.10.7.10"
   }
-  # dynamic "target" {
-  #   for_each = data.yandex_compute_instance.nginx-servers[*].network_interface.0.ip_address
-  #   content {
-  #     subnet_id = yandex_vpc_subnet.subnets["lab-subnet"].id
-  #     address   = target.value
-  #   }
-  # }
 }
 
 resource "yandex_lb_network_load_balancer" "db-nlb" {
@@ -597,7 +663,7 @@ resource "yandex_lb_network_load_balancer" "db-nlb" {
   type = "internal"
 
   listener {
-    name = "my-listener"
+    name = "listener-6432"
     port = 6432
     internal_address_spec {
       subnet_id = yandex_vpc_subnet.subnet-a.id
@@ -618,100 +684,144 @@ resource "yandex_lb_network_load_balancer" "db-nlb" {
   }
 }
 
+# resource "yandex_lb_network_load_balancer" "front-nlb" {
+#   name = "front-nlb"
+
+#   listener {
+#     name = "my-listener"
+#     port = 80
+#     external_address_spec {
+#       ip_version = "ipv4"
+#       address = var.web_nat_ip
+#     }
+#   }
+
+#   attached_target_group {
+#     target_group_id = "${yandex_lb_target_group.front-tg.id}"
+
+#     healthcheck {
+#       name = "http"
+#       http_options {
+#         port = 80
+#         path = "/"
+#       }
+#     }
+#   }
+# }
+
+# resource "yandex_lb_target_group" "front-tg" {
+#   name      = "front-tg"
+#   region_id = "ru-central1"
+#   //folder_id = yandex_resourcemanager_folder.folders["lab-folder"].id
+
+#   target {
+#     subnet_id = "${yandex_vpc_subnet.subnet-a.id}"
+#     address   = "10.10.5.6"
+#   }
+#   target {
+#     subnet_id = "${yandex_vpc_subnet.subnet-b.id}"
+#     address   = "10.10.6.6"
+#   }
+#   target {
+#     subnet_id = "${yandex_vpc_subnet.subnet-c.id}"
+#     address   = "10.10.7.6"
+#   }
+# }
+
 # Creating a ALB
 
-resource "yandex_alb_target_group" "alb-tg" {
-  name           = "alb-tg"
-  target {
-    subnet_id    = yandex_vpc_subnet.subnet-a.id
-    ip_address   = "10.10.5.10"
-  }
-  target {
-    subnet_id    = yandex_vpc_subnet.subnet-b.id
-    ip_address   = "10.10.6.10"
-  }
-  target {
-    subnet_id    = yandex_vpc_subnet.subnet-c.id
-    ip_address   = "10.10.7.10"
-  }
-}
+# resource "yandex_alb_target_group" "alb-tg" {
+#   name           = "alb-tg"
+#   target {
+#     subnet_id    = yandex_vpc_subnet.subnet-a.id
+#     ip_address   = "10.10.5.10"
+#   }
+#   target {
+#     subnet_id    = yandex_vpc_subnet.subnet-b.id
+#     ip_address   = "10.10.6.10"
+#   }
+#   target {
+#     subnet_id    = yandex_vpc_subnet.subnet-c.id
+#     ip_address   = "10.10.7.10"
+#   }
+# }
 
-resource "yandex_alb_backend_group" "alb-bg" {
-  name                     = "alb-bg"
+# resource "yandex_alb_backend_group" "alb-bg" {
+#   name                     = "alb-bg"
 
-  http_backend {
-    name                   = "backend-1"
-    port                   = 80
-    target_group_ids       = [yandex_alb_target_group.alb-tg.id]
-    healthcheck {
-      timeout              = "10s"
-      interval             = "10s"
-      healthcheck_port     = 80
-      http_healthcheck {
-        path               = "/"
-      }
-    }
-  }
-}
+#   http_backend {
+#     name                   = "backend-1"
+#     port                   = 80
+#     target_group_ids       = [yandex_alb_target_group.alb-tg.id]
+#     healthcheck {
+#       timeout              = "10s"
+#       interval             = "10s"
+#       healthcheck_port     = 80
+#       http_healthcheck {
+#         path               = "/"
+#       }
+#     }
+#   }
+# }
 
-resource "yandex_alb_http_router" "alb-router" {
-  name   = "alb-router"
-}
+# resource "yandex_alb_http_router" "alb-router" {
+#   name   = "alb-router"
+# }
 
-resource "yandex_alb_virtual_host" "alb-host" {
-  name           = "alb-host"
-  http_router_id = yandex_alb_http_router.alb-router.id
-  authority      = ["dip-akopalev.ru"]
-  route {
-    name = "route-1"
-    http_route {
-      http_route_action {
-        backend_group_id = yandex_alb_backend_group.alb-bg.id
-      }
-    }
-  }
-}
+# resource "yandex_alb_virtual_host" "alb-host" {
+#   name           = "alb-host"
+#   http_router_id = yandex_alb_http_router.alb-router.id
+#   authority      = ["dip-akopalev.ru"]
+#   route {
+#     name = "route-1"
+#     http_route {
+#       http_route_action {
+#         backend_group_id = yandex_alb_backend_group.alb-bg.id
+#       }
+#     }
+#   }
+# }
 
-resource "yandex_alb_load_balancer" "alb-1" {
-  name               = "alb-1"
-  network_id         = yandex_vpc_network.network1.id
-  security_group_ids = [module.ext-sec-sg-create.sg_id]
+# resource "yandex_alb_load_balancer" "alb-1" {
+#   name               = "alb-1"
+#   network_id         = yandex_vpc_network.network1.id
+#   security_group_ids = [module.ext-sec-sg-create.sg_id]
 
-  allocation_policy {
-    location {
-      zone_id   = "ru-central1-a"
-      subnet_id = yandex_vpc_subnet.subnet-a.id
-    }
+#   allocation_policy {
+#     location {
+#       zone_id   = "ru-central1-a"
+#       subnet_id = yandex_vpc_subnet.subnet-a.id
+#     }
 
-    location {
-      zone_id   = "ru-central1-b"
-      subnet_id = yandex_vpc_subnet.subnet-b.id
-    }
+#     location {
+#       zone_id   = "ru-central1-b"
+#       subnet_id = yandex_vpc_subnet.subnet-b.id
+#     }
 
-    location {
-      zone_id   = "ru-central1-c"
-      subnet_id = yandex_vpc_subnet.subnet-c.id
-    }
+#     location {
+#       zone_id   = "ru-central1-c"
+#       subnet_id = yandex_vpc_subnet.subnet-c.id
+#     }
 
-  }
+#   }
 
-  listener {
-    name = "alb-listener"
-    endpoint {
-      address {
-        external_ipv4_address {
-          address = var.web_nat_ip
-        }
-      }
-      ports = [ 80 ]
-    }
-    http {
-      handler {
-        http_router_id = yandex_alb_http_router.alb-router.id
-      }
-    }
-  }
-}
+#   listener {
+#     name = "alb-listener"
+#     endpoint {
+#       address {
+#         external_ipv4_address {
+#           address = var.web_nat_ip
+#         }
+#       }
+#       ports = [ 80 ]
+#     }
+#     http {
+#       handler {
+#         http_router_id = yandex_alb_http_router.alb-router.id
+#       }
+#     }
+#   }
+# }
 
 # Creating a Cloud DNS zone
 

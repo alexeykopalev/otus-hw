@@ -260,25 +260,25 @@
     state: restarted
     enabled: true
 
-# - name: Gather virtual IP resource status
-#   command: "pcs resource show HAProxy"
-#   register: resource_HAProxy_status
-#   ignore_errors: true
+- name: Gather virtual IP resource status
+  command: "pcs resource show HAProxy"
+  register: resource_HAProxy_status
+  ignore_errors: true
 
-# # pcs resource create VirtualIP IPaddr2 ip=10.10.10.254 cidr_netmask=24  op monitor interval=10s on-fail=ignore
-# - name: Create virtual IP (pcs resource IPaddr2)
-#   ansible.builtin.command: "pcs resource create VirtualIP IPaddr2 ip=10.10.5.5 cidr_netmask=24  op monitor interval=10s on-fail=ignore"
-#   run_once: true
-#   when: resource_HAProxy_status.rc | int != 0
+# pcs resource create VirtualIP IPaddr2 ip=10.10.10.254 cidr_netmask=24  op monitor interval=10s on-fail=ignore
+- name: Create virtual IP (pcs resource IPaddr2)
+  ansible.builtin.command: "pcs resource create VirtualIP IPaddr2 ip=10.10.5.5 cidr_netmask=24  op monitor interval=10s on-fail=ignore"
+  run_once: true
+  when: resource_HAProxy_status.rc | int != 0
 
-# # pcs resource create HAProxy systemd:haproxy op monitor interval=10s on-fail=ignore clone interleave=true ordered=true
-# - name: Create pcs resource HAProxy
-#   ansible.builtin.command: pcs resource create HAProxy systemd:haproxy op monitor interval=10s on-fail=ignore clone interleave=true ordered=true
-#   run_once: true
-#   when: resource_HAProxy_status.rc | int != 0
+# pcs resource create HAProxy systemd:haproxy op monitor interval=10s on-fail=ignore clone interleave=true ordered=true
+- name: Create pcs resource HAProxy
+  ansible.builtin.command: pcs resource create HAProxy systemd:haproxy op monitor interval=10s on-fail=ignore clone interleave=true ordered=true
+  run_once: true
+  when: resource_HAProxy_status.rc | int != 0
 
-#   # pcs constraint colocation add VirtualIP with HAProxy-clone score=INFINITY
-# - name: Combine VirtualIP and HAProxy for collaboration
-#   ansible.builtin.command: pcs constraint colocation add VirtualIP with HAProxy-clone score=INFINITY
-#   run_once: true
-#   when: resource_HAProxy_status.rc | int != 0
+  # pcs constraint colocation add VirtualIP with HAProxy-clone score=INFINITY
+- name: Combine VirtualIP and HAProxy for collaboration
+  ansible.builtin.command: pcs constraint colocation add VirtualIP with HAProxy-clone score=INFINITY
+  run_once: true
+  when: resource_HAProxy_status.rc | int != 0
