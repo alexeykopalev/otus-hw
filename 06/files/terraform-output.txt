@@ -1,0 +1,1871 @@
+[alexey@ask-fedora38-vb 06]$ terraform apply
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # yandex_compute_disk.iscsi-disk[0] will be created
+  + resource "yandex_compute_disk" "iscsi-disk" {
+      + block_size  = 4096
+      + created_at  = (known after apply)
+      + folder_id   = (known after apply)
+      + id          = (known after apply)
+      + name        = "iscsi-disk-01"
+      + product_ids = (known after apply)
+      + size        = 15
+      + status      = (known after apply)
+      + type        = "network-hdd"
+      + zone        = "ru-central1-a"
+    }
+
+  # yandex_dns_recordset.wp-pg-a will be created
+  + resource "yandex_dns_recordset" "wp-pg-a" {
+      + data    = [
+          + "158.160.75.138",
+        ]
+      + id      = (known after apply)
+      + name    = "dip-akopalev.ru."
+      + ttl     = 600
+      + type    = "A"
+      + zone_id = (known after apply)
+    }
+
+  # yandex_dns_recordset.wp-pg-cname will be created
+  + resource "yandex_dns_recordset" "wp-pg-cname" {
+      + data    = [
+          + "dip-akopalev.ru.",
+        ]
+      + id      = (known after apply)
+      + name    = "www"
+      + ttl     = 600
+      + type    = "CNAME"
+      + zone_id = (known after apply)
+    }
+
+  # yandex_dns_zone.wp-pg will be created
+  + resource "yandex_dns_zone" "wp-pg" {
+      + created_at       = (known after apply)
+      + folder_id        = (known after apply)
+      + id               = (known after apply)
+      + name             = "zone-1"
+      + private_networks = (known after apply)
+      + public           = true
+      + zone             = "dip-akopalev.ru."
+    }
+
+  # yandex_lb_network_load_balancer.db-nlb will be created
+  + resource "yandex_lb_network_load_balancer" "db-nlb" {
+      + created_at          = (known after apply)
+      + deletion_protection = (known after apply)
+      + folder_id           = (known after apply)
+      + id                  = (known after apply)
+      + name                = "db-nlb"
+      + region_id           = (known after apply)
+      + type                = "internal"
+
+      + attached_target_group {
+          + target_group_id = (known after apply)
+
+          + healthcheck {
+              + healthy_threshold   = 2
+              + interval            = 2
+              + name                = "tcp-6432"
+              + timeout             = 1
+              + unhealthy_threshold = 2
+
+              + tcp_options {
+                  + port = 6432
+                }
+            }
+        }
+
+      + listener {
+          + name        = "listener-6432"
+          + port        = 6432
+          + protocol    = (known after apply)
+          + target_port = (known after apply)
+
+          + internal_address_spec {
+              + address    = "10.10.5.5"
+              + ip_version = "ipv4"
+              + subnet_id  = (known after apply)
+            }
+        }
+    }
+
+  # yandex_lb_network_load_balancer.front-nlb will be created
+  + resource "yandex_lb_network_load_balancer" "front-nlb" {
+      + created_at          = (known after apply)
+      + deletion_protection = (known after apply)
+      + folder_id           = (known after apply)
+      + id                  = (known after apply)
+      + name                = "front-nlb"
+      + region_id           = (known after apply)
+      + type                = "external"
+
+      + attached_target_group {
+          + target_group_id = (known after apply)
+
+          + healthcheck {
+              + healthy_threshold   = 2
+              + interval            = 2
+              + name                = "http"
+              + timeout             = 1
+              + unhealthy_threshold = 2
+
+              + http_options {
+                  + path = "/"
+                  + port = 80
+                }
+            }
+        }
+
+      + listener {
+          + name        = "my-listener"
+          + port        = 80
+          + protocol    = (known after apply)
+          + target_port = (known after apply)
+
+          + external_address_spec {
+              + address    = "158.160.75.138"
+              + ip_version = "ipv4"
+            }
+        }
+    }
+
+  # yandex_lb_target_group.db-tg will be created
+  + resource "yandex_lb_target_group" "db-tg" {
+      + created_at = (known after apply)
+      + folder_id  = (known after apply)
+      + id         = (known after apply)
+      + name       = "db-tg"
+      + region_id  = "ru-central1"
+
+      + target {
+          + address   = "10.10.5.10"
+          + subnet_id = (known after apply)
+        }
+      + target {
+          + address   = "10.10.6.10"
+          + subnet_id = (known after apply)
+        }
+      + target {
+          + address   = "10.10.7.10"
+          + subnet_id = (known after apply)
+        }
+    }
+
+  # yandex_lb_target_group.front-tg will be created
+  + resource "yandex_lb_target_group" "front-tg" {
+      + created_at = (known after apply)
+      + folder_id  = (known after apply)
+      + id         = (known after apply)
+      + name       = "front-tg"
+      + region_id  = "ru-central1"
+
+      + target {
+          + address   = "10.10.5.6"
+          + subnet_id = (known after apply)
+        }
+      + target {
+          + address   = "10.10.6.6"
+          + subnet_id = (known after apply)
+        }
+      + target {
+          + address   = "10.10.7.6"
+          + subnet_id = (known after apply)
+        }
+    }
+
+  # yandex_vpc_gateway.nat_gateway will be created
+  + resource "yandex_vpc_gateway" "nat_gateway" {
+      + created_at = (known after apply)
+      + folder_id  = (known after apply)
+      + id         = (known after apply)
+      + labels     = (known after apply)
+      + name       = "test-gateway"
+
+      + shared_egress_gateway {}
+    }
+
+  # yandex_vpc_network.network1 will be created
+  + resource "yandex_vpc_network" "network1" {
+      + created_at                = (known after apply)
+      + default_security_group_id = (known after apply)
+      + folder_id                 = (known after apply)
+      + id                        = (known after apply)
+      + labels                    = (known after apply)
+      + name                      = "network1"
+      + subnet_ids                = (known after apply)
+    }
+
+  # yandex_vpc_route_table.rt will be created
+  + resource "yandex_vpc_route_table" "rt" {
+      + created_at = (known after apply)
+      + folder_id  = (known after apply)
+      + id         = (known after apply)
+      + labels     = (known after apply)
+      + name       = "test-route-table"
+      + network_id = (known after apply)
+
+      + static_route {
+          + destination_prefix = "0.0.0.0/0"
+          + gateway_id         = (known after apply)
+        }
+    }
+
+  # yandex_vpc_subnet.subnet-a will be created
+  + resource "yandex_vpc_subnet" "subnet-a" {
+      + created_at     = (known after apply)
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-a"
+      + network_id     = (known after apply)
+      + route_table_id = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.5.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-a"
+    }
+
+  # yandex_vpc_subnet.subnet-b will be created
+  + resource "yandex_vpc_subnet" "subnet-b" {
+      + created_at     = (known after apply)
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-b"
+      + network_id     = (known after apply)
+      + route_table_id = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.6.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-b"
+    }
+
+  # yandex_vpc_subnet.subnet-bast will be created
+  + resource "yandex_vpc_subnet" "subnet-bast" {
+      + created_at     = (known after apply)
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-bast"
+      + network_id     = (known after apply)
+      + v4_cidr_blocks = [
+          + "172.16.16.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-b"
+    }
+
+  # yandex_vpc_subnet.subnet-c will be created
+  + resource "yandex_vpc_subnet" "subnet-c" {
+      + created_at     = (known after apply)
+      + folder_id      = (known after apply)
+      + id             = (known after apply)
+      + labels         = (known after apply)
+      + name           = "subnet-c"
+      + network_id     = (known after apply)
+      + route_table_id = (known after apply)
+      + v4_cidr_blocks = [
+          + "10.10.7.0/24",
+        ]
+      + v6_cidr_blocks = (known after apply)
+      + zone           = "ru-central1-c"
+    }
+
+  # module.back-hosts["back-host1"].yandex_compute_instance.vm will be created
+  + resource "yandex_compute_instance" "vm" {
+      + allow_stopping_for_update = true
+      + created_at                = (known after apply)
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = "back-host1"
+      + id                        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: akopalev
+                    groups: wheel
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCxHlMc4ySp0W7oIBf1aRAxdIaoFyx3IZ+PNpAvDgluLZxmNLJ22ImYIcQkloY9tLwhD6guIdkoWtSusrjPfAO5bEPwKfa5GI51Qoq76gZ5/KyMtnYAARDyuSbMjeqaAJaF71oGKC4032hTlXtvMf7wAy8nfrP3zrRE7PDsqLh5vuVctAa78SFHp92394GYU0LkeCbE8dN+RW7T1wFoK7jK2HfVfLZMXtiJT3pji7jtkB7SKW8hNCeojKylZSW/AQhEyo32aPjZHomtQDkJ4DPVkPiGmcpDtpQ5u0fm0soEkODlKzECiNZM2pQq/gRdSmvObMbCkot5yjS4+uAqxl4jnzJU57lWDtFrIvkBDGJ2Y564r/pctq9uWp/QSbPgEv8uT/QaIoVeYMO723HHSzLRPVslrQiwkCU1qTFFHFCA2OlGJLZF05mGEi7pDAv2EX6PmfTdKwh8IsamEUgZsYbo+/RWKi56VDFGsZttrW3kVQ9mYEUAgitkDWnwpFO8DVU= alexey@vivobook-fedora
+            EOT
+        }
+      + name                      = "back-host1"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-a"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd81prb1447ilqb2mp3m"
+              + name        = (known after apply)
+              + size        = 10
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = "10.10.5.10"
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = false
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = (known after apply)
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = false
+        }
+    }
+
+  # module.back-hosts["back-host2"].yandex_compute_instance.vm will be created
+  + resource "yandex_compute_instance" "vm" {
+      + allow_stopping_for_update = true
+      + created_at                = (known after apply)
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = "back-host2"
+      + id                        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: akopalev
+                    groups: wheel
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCxHlMc4ySp0W7oIBf1aRAxdIaoFyx3IZ+PNpAvDgluLZxmNLJ22ImYIcQkloY9tLwhD6guIdkoWtSusrjPfAO5bEPwKfa5GI51Qoq76gZ5/KyMtnYAARDyuSbMjeqaAJaF71oGKC4032hTlXtvMf7wAy8nfrP3zrRE7PDsqLh5vuVctAa78SFHp92394GYU0LkeCbE8dN+RW7T1wFoK7jK2HfVfLZMXtiJT3pji7jtkB7SKW8hNCeojKylZSW/AQhEyo32aPjZHomtQDkJ4DPVkPiGmcpDtpQ5u0fm0soEkODlKzECiNZM2pQq/gRdSmvObMbCkot5yjS4+uAqxl4jnzJU57lWDtFrIvkBDGJ2Y564r/pctq9uWp/QSbPgEv8uT/QaIoVeYMO723HHSzLRPVslrQiwkCU1qTFFHFCA2OlGJLZF05mGEi7pDAv2EX6PmfTdKwh8IsamEUgZsYbo+/RWKi56VDFGsZttrW3kVQ9mYEUAgitkDWnwpFO8DVU= alexey@vivobook-fedora
+            EOT
+        }
+      + name                      = "back-host2"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-b"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd81prb1447ilqb2mp3m"
+              + name        = (known after apply)
+              + size        = 10
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = "10.10.6.10"
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = false
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = (known after apply)
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = false
+        }
+    }
+
+  # module.back-hosts["back-host3"].yandex_compute_instance.vm will be created
+  + resource "yandex_compute_instance" "vm" {
+      + allow_stopping_for_update = true
+      + created_at                = (known after apply)
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = "back-host3"
+      + id                        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: akopalev
+                    groups: wheel
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCxHlMc4ySp0W7oIBf1aRAxdIaoFyx3IZ+PNpAvDgluLZxmNLJ22ImYIcQkloY9tLwhD6guIdkoWtSusrjPfAO5bEPwKfa5GI51Qoq76gZ5/KyMtnYAARDyuSbMjeqaAJaF71oGKC4032hTlXtvMf7wAy8nfrP3zrRE7PDsqLh5vuVctAa78SFHp92394GYU0LkeCbE8dN+RW7T1wFoK7jK2HfVfLZMXtiJT3pji7jtkB7SKW8hNCeojKylZSW/AQhEyo32aPjZHomtQDkJ4DPVkPiGmcpDtpQ5u0fm0soEkODlKzECiNZM2pQq/gRdSmvObMbCkot5yjS4+uAqxl4jnzJU57lWDtFrIvkBDGJ2Y564r/pctq9uWp/QSbPgEv8uT/QaIoVeYMO723HHSzLRPVslrQiwkCU1qTFFHFCA2OlGJLZF05mGEi7pDAv2EX6PmfTdKwh8IsamEUgZsYbo+/RWKi56VDFGsZttrW3kVQ9mYEUAgitkDWnwpFO8DVU= alexey@vivobook-fedora
+            EOT
+        }
+      + name                      = "back-host3"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-c"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd81prb1447ilqb2mp3m"
+              + name        = (known after apply)
+              + size        = 10
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = "10.10.7.10"
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = false
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = (known after apply)
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = false
+        }
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group.sg will be created
+  + resource "yandex_vpc_security_group" "sg" {
+      + created_at = (known after apply)
+      + folder_id  = (known after apply)
+      + id         = (known after apply)
+      + labels     = (known after apply)
+      + name       = "back-sec-sg"
+      + network_id = (known after apply)
+      + status     = (known after apply)
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["0"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "Разрешить весь исходящий трафик"
+      + direction              = "egress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = -1
+      + protocol               = "ANY"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "0.0.0.0/0",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["1"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "Разрешить SSH от бастионного хоста"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 22
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "172.16.16.0/24",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["10"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "allow corosync-qnetd subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 5403
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["11"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "allow corosync multicast-udp subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 5404
+      + protocol               = "UDP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["12"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "allow corosync subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 5405
+      + protocol               = "UDP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["13"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "allow CLVM subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 21064
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["14"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "allow booth ticket manager subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 9929
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["15"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "allow UDP booth ticket manager subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 9929
+      + protocol               = "UDP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["16"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "6432"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 6432
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["2"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "Разрешить ping"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = -1
+      + protocol               = "ICMP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "0.0.0.0/0",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["3"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "Balancer"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 80
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "0.0.0.0/0",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["4"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "balancer helpcheck"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 6432
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "198.18.235.0/24",
+          + "198.18.248.0/24",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["5"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "allow http subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 80
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["6"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "allow 7000 subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 7000
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "0.0.0.0/0",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["7"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "allow iscsi 3620 subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 3260
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["8"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "allow pcsd port subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 2224
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+  # module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["9"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "allow crmd port subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 3121
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+  # module.bast-host.yandex_compute_instance.vm will be created
+  + resource "yandex_compute_instance" "vm" {
+      + allow_stopping_for_update = true
+      + created_at                = (known after apply)
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = "bast-host-srv"
+      + id                        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: akopalev
+                    groups: wheel
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCxHlMc4ySp0W7oIBf1aRAxdIaoFyx3IZ+PNpAvDgluLZxmNLJ22ImYIcQkloY9tLwhD6guIdkoWtSusrjPfAO5bEPwKfa5GI51Qoq76gZ5/KyMtnYAARDyuSbMjeqaAJaF71oGKC4032hTlXtvMf7wAy8nfrP3zrRE7PDsqLh5vuVctAa78SFHp92394GYU0LkeCbE8dN+RW7T1wFoK7jK2HfVfLZMXtiJT3pji7jtkB7SKW8hNCeojKylZSW/AQhEyo32aPjZHomtQDkJ4DPVkPiGmcpDtpQ5u0fm0soEkODlKzECiNZM2pQq/gRdSmvObMbCkot5yjS4+uAqxl4jnzJU57lWDtFrIvkBDGJ2Y564r/pctq9uWp/QSbPgEv8uT/QaIoVeYMO723HHSzLRPVslrQiwkCU1qTFFHFCA2OlGJLZF05mGEi7pDAv2EX6PmfTdKwh8IsamEUgZsYbo+/RWKi56VDFGsZttrW3kVQ9mYEUAgitkDWnwpFO8DVU= alexey@vivobook-fedora
+            EOT
+        }
+      + name                      = "bast-host-srv"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-b"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd87t5gt48uc6feiibm8"
+              + name        = (known after apply)
+              + size        = 10
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = "172.16.16.254"
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = true
+          + nat_ip_address     = "158.160.84.164"
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = (known after apply)
+        }
+
+      + resources {
+          + core_fraction = 20
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = false
+        }
+    }
+
+  # module.bast-sec-sg-create.yandex_vpc_security_group.sg will be created
+  + resource "yandex_vpc_security_group" "sg" {
+      + created_at = (known after apply)
+      + folder_id  = (known after apply)
+      + id         = (known after apply)
+      + labels     = (known after apply)
+      + name       = "bast-sec-sg"
+      + network_id = (known after apply)
+      + status     = (known after apply)
+    }
+
+  # module.bast-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["0"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "Разрешить SSH"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 22
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "0.0.0.0/0",
+        ]
+    }
+
+  # module.bast-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["1"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "Разрешить ping"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = -1
+      + protocol               = "ICMP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "0.0.0.0/0",
+        ]
+    }
+
+  # module.bast-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["2"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "Разрешить весь исходящий трафик"
+      + direction              = "egress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = -1
+      + protocol               = "ANY"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "0.0.0.0/0",
+        ]
+    }
+
+  # module.db-hosts["db-host1"].yandex_compute_instance.vm will be created
+  + resource "yandex_compute_instance" "vm" {
+      + allow_stopping_for_update = true
+      + created_at                = (known after apply)
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = "db-host1"
+      + id                        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: akopalev
+                    groups: wheel
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCxHlMc4ySp0W7oIBf1aRAxdIaoFyx3IZ+PNpAvDgluLZxmNLJ22ImYIcQkloY9tLwhD6guIdkoWtSusrjPfAO5bEPwKfa5GI51Qoq76gZ5/KyMtnYAARDyuSbMjeqaAJaF71oGKC4032hTlXtvMf7wAy8nfrP3zrRE7PDsqLh5vuVctAa78SFHp92394GYU0LkeCbE8dN+RW7T1wFoK7jK2HfVfLZMXtiJT3pji7jtkB7SKW8hNCeojKylZSW/AQhEyo32aPjZHomtQDkJ4DPVkPiGmcpDtpQ5u0fm0soEkODlKzECiNZM2pQq/gRdSmvObMbCkot5yjS4+uAqxl4jnzJU57lWDtFrIvkBDGJ2Y564r/pctq9uWp/QSbPgEv8uT/QaIoVeYMO723HHSzLRPVslrQiwkCU1qTFFHFCA2OlGJLZF05mGEi7pDAv2EX6PmfTdKwh8IsamEUgZsYbo+/RWKi56VDFGsZttrW3kVQ9mYEUAgitkDWnwpFO8DVU= alexey@vivobook-fedora
+            EOT
+        }
+      + name                      = "db-host1"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-a"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd81prb1447ilqb2mp3m"
+              + name        = (known after apply)
+              + size        = 10
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = "10.10.5.4"
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = false
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = (known after apply)
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = false
+        }
+    }
+
+  # module.db-hosts["db-host2"].yandex_compute_instance.vm will be created
+  + resource "yandex_compute_instance" "vm" {
+      + allow_stopping_for_update = true
+      + created_at                = (known after apply)
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = "db-host2"
+      + id                        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: akopalev
+                    groups: wheel
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCxHlMc4ySp0W7oIBf1aRAxdIaoFyx3IZ+PNpAvDgluLZxmNLJ22ImYIcQkloY9tLwhD6guIdkoWtSusrjPfAO5bEPwKfa5GI51Qoq76gZ5/KyMtnYAARDyuSbMjeqaAJaF71oGKC4032hTlXtvMf7wAy8nfrP3zrRE7PDsqLh5vuVctAa78SFHp92394GYU0LkeCbE8dN+RW7T1wFoK7jK2HfVfLZMXtiJT3pji7jtkB7SKW8hNCeojKylZSW/AQhEyo32aPjZHomtQDkJ4DPVkPiGmcpDtpQ5u0fm0soEkODlKzECiNZM2pQq/gRdSmvObMbCkot5yjS4+uAqxl4jnzJU57lWDtFrIvkBDGJ2Y564r/pctq9uWp/QSbPgEv8uT/QaIoVeYMO723HHSzLRPVslrQiwkCU1qTFFHFCA2OlGJLZF05mGEi7pDAv2EX6PmfTdKwh8IsamEUgZsYbo+/RWKi56VDFGsZttrW3kVQ9mYEUAgitkDWnwpFO8DVU= alexey@vivobook-fedora
+            EOT
+        }
+      + name                      = "db-host2"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-b"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd81prb1447ilqb2mp3m"
+              + name        = (known after apply)
+              + size        = 10
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = "10.10.6.4"
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = false
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = (known after apply)
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = false
+        }
+    }
+
+  # module.db-hosts["db-host3"].yandex_compute_instance.vm will be created
+  + resource "yandex_compute_instance" "vm" {
+      + allow_stopping_for_update = true
+      + created_at                = (known after apply)
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = "db-host3"
+      + id                        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: akopalev
+                    groups: wheel
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCxHlMc4ySp0W7oIBf1aRAxdIaoFyx3IZ+PNpAvDgluLZxmNLJ22ImYIcQkloY9tLwhD6guIdkoWtSusrjPfAO5bEPwKfa5GI51Qoq76gZ5/KyMtnYAARDyuSbMjeqaAJaF71oGKC4032hTlXtvMf7wAy8nfrP3zrRE7PDsqLh5vuVctAa78SFHp92394GYU0LkeCbE8dN+RW7T1wFoK7jK2HfVfLZMXtiJT3pji7jtkB7SKW8hNCeojKylZSW/AQhEyo32aPjZHomtQDkJ4DPVkPiGmcpDtpQ5u0fm0soEkODlKzECiNZM2pQq/gRdSmvObMbCkot5yjS4+uAqxl4jnzJU57lWDtFrIvkBDGJ2Y564r/pctq9uWp/QSbPgEv8uT/QaIoVeYMO723HHSzLRPVslrQiwkCU1qTFFHFCA2OlGJLZF05mGEi7pDAv2EX6PmfTdKwh8IsamEUgZsYbo+/RWKi56VDFGsZttrW3kVQ9mYEUAgitkDWnwpFO8DVU= alexey@vivobook-fedora
+            EOT
+        }
+      + name                      = "db-host3"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-c"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd81prb1447ilqb2mp3m"
+              + name        = (known after apply)
+              + size        = 10
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = "10.10.7.4"
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = false
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = (known after apply)
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = false
+        }
+    }
+
+  # module.ext-sec-sg-create.yandex_vpc_security_group.sg will be created
+  + resource "yandex_vpc_security_group" "sg" {
+      + created_at = (known after apply)
+      + folder_id  = (known after apply)
+      + id         = (known after apply)
+      + labels     = (known after apply)
+      + name       = "ext-sec-sg"
+      + network_id = (known after apply)
+      + status     = (known after apply)
+    }
+
+  # module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["0"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "Разрешить SSH от бастионного хоста"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 22
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "172.16.16.0/24",
+        ]
+    }
+
+  # module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["1"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "Разрешить ping"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = -1
+      + protocol               = "ICMP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "0.0.0.0/0",
+        ]
+    }
+
+  # module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["2"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "ext-http"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 80
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "0.0.0.0/0",
+        ]
+    }
+
+  # module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["3"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "ext-https"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 443
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "0.0.0.0/0",
+        ]
+    }
+
+  # module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["4"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "healthchecks"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 30080
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "198.18.235.0/24",
+          + "198.18.248.0/24",
+        ]
+    }
+
+  # module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["5"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "healthchecks"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 80
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "198.18.235.0/24",
+          + "198.18.248.0/24",
+        ]
+    }
+
+  # module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["6"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "allow 7000 subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 7000
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "0.0.0.0/0",
+        ]
+    }
+
+  # module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["7"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "Разрешить весь исходящий трафик"
+      + direction              = "egress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = -1
+      + protocol               = "ANY"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "0.0.0.0/0",
+        ]
+    }
+
+  # module.front-hosts["front-host1"].yandex_compute_instance.vm will be created
+  + resource "yandex_compute_instance" "vm" {
+      + allow_stopping_for_update = true
+      + created_at                = (known after apply)
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = "front-host1"
+      + id                        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: akopalev
+                    groups: wheel
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCxHlMc4ySp0W7oIBf1aRAxdIaoFyx3IZ+PNpAvDgluLZxmNLJ22ImYIcQkloY9tLwhD6guIdkoWtSusrjPfAO5bEPwKfa5GI51Qoq76gZ5/KyMtnYAARDyuSbMjeqaAJaF71oGKC4032hTlXtvMf7wAy8nfrP3zrRE7PDsqLh5vuVctAa78SFHp92394GYU0LkeCbE8dN+RW7T1wFoK7jK2HfVfLZMXtiJT3pji7jtkB7SKW8hNCeojKylZSW/AQhEyo32aPjZHomtQDkJ4DPVkPiGmcpDtpQ5u0fm0soEkODlKzECiNZM2pQq/gRdSmvObMbCkot5yjS4+uAqxl4jnzJU57lWDtFrIvkBDGJ2Y564r/pctq9uWp/QSbPgEv8uT/QaIoVeYMO723HHSzLRPVslrQiwkCU1qTFFHFCA2OlGJLZF05mGEi7pDAv2EX6PmfTdKwh8IsamEUgZsYbo+/RWKi56VDFGsZttrW3kVQ9mYEUAgitkDWnwpFO8DVU= alexey@vivobook-fedora
+            EOT
+        }
+      + name                      = "front-host1"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-a"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd81prb1447ilqb2mp3m"
+              + name        = (known after apply)
+              + size        = 10
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = "10.10.5.6"
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = false
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = (known after apply)
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = false
+        }
+    }
+
+  # module.front-hosts["front-host2"].yandex_compute_instance.vm will be created
+  + resource "yandex_compute_instance" "vm" {
+      + allow_stopping_for_update = true
+      + created_at                = (known after apply)
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = "front-host2"
+      + id                        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: akopalev
+                    groups: wheel
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCxHlMc4ySp0W7oIBf1aRAxdIaoFyx3IZ+PNpAvDgluLZxmNLJ22ImYIcQkloY9tLwhD6guIdkoWtSusrjPfAO5bEPwKfa5GI51Qoq76gZ5/KyMtnYAARDyuSbMjeqaAJaF71oGKC4032hTlXtvMf7wAy8nfrP3zrRE7PDsqLh5vuVctAa78SFHp92394GYU0LkeCbE8dN+RW7T1wFoK7jK2HfVfLZMXtiJT3pji7jtkB7SKW8hNCeojKylZSW/AQhEyo32aPjZHomtQDkJ4DPVkPiGmcpDtpQ5u0fm0soEkODlKzECiNZM2pQq/gRdSmvObMbCkot5yjS4+uAqxl4jnzJU57lWDtFrIvkBDGJ2Y564r/pctq9uWp/QSbPgEv8uT/QaIoVeYMO723HHSzLRPVslrQiwkCU1qTFFHFCA2OlGJLZF05mGEi7pDAv2EX6PmfTdKwh8IsamEUgZsYbo+/RWKi56VDFGsZttrW3kVQ9mYEUAgitkDWnwpFO8DVU= alexey@vivobook-fedora
+            EOT
+        }
+      + name                      = "front-host2"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-b"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd81prb1447ilqb2mp3m"
+              + name        = (known after apply)
+              + size        = 10
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = "10.10.6.6"
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = false
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = (known after apply)
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = false
+        }
+    }
+
+  # module.front-hosts["front-host3"].yandex_compute_instance.vm will be created
+  + resource "yandex_compute_instance" "vm" {
+      + allow_stopping_for_update = true
+      + created_at                = (known after apply)
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = "front-host3"
+      + id                        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: akopalev
+                    groups: wheel
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCxHlMc4ySp0W7oIBf1aRAxdIaoFyx3IZ+PNpAvDgluLZxmNLJ22ImYIcQkloY9tLwhD6guIdkoWtSusrjPfAO5bEPwKfa5GI51Qoq76gZ5/KyMtnYAARDyuSbMjeqaAJaF71oGKC4032hTlXtvMf7wAy8nfrP3zrRE7PDsqLh5vuVctAa78SFHp92394GYU0LkeCbE8dN+RW7T1wFoK7jK2HfVfLZMXtiJT3pji7jtkB7SKW8hNCeojKylZSW/AQhEyo32aPjZHomtQDkJ4DPVkPiGmcpDtpQ5u0fm0soEkODlKzECiNZM2pQq/gRdSmvObMbCkot5yjS4+uAqxl4jnzJU57lWDtFrIvkBDGJ2Y564r/pctq9uWp/QSbPgEv8uT/QaIoVeYMO723HHSzLRPVslrQiwkCU1qTFFHFCA2OlGJLZF05mGEi7pDAv2EX6PmfTdKwh8IsamEUgZsYbo+/RWKi56VDFGsZttrW3kVQ9mYEUAgitkDWnwpFO8DVU= alexey@vivobook-fedora
+            EOT
+        }
+      + name                      = "front-host3"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-c"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd81prb1447ilqb2mp3m"
+              + name        = (known after apply)
+              + size        = 10
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = "10.10.7.6"
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = false
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = (known after apply)
+        }
+
+      + resources {
+          + core_fraction = 100
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = false
+        }
+    }
+
+  # module.iscsi-srv.yandex_compute_instance.vm will be created
+  + resource "yandex_compute_instance" "vm" {
+      + allow_stopping_for_update = true
+      + created_at                = (known after apply)
+      + folder_id                 = (known after apply)
+      + fqdn                      = (known after apply)
+      + gpu_cluster_id            = (known after apply)
+      + hostname                  = "iscsi-srv"
+      + id                        = (known after apply)
+      + metadata                  = {
+          + "user-data" = <<-EOT
+                #cloud-config
+                users:
+                  - name: akopalev
+                    groups: wheel
+                    shell: /bin/bash
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                    ssh_authorized_keys:
+                      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCxHlMc4ySp0W7oIBf1aRAxdIaoFyx3IZ+PNpAvDgluLZxmNLJ22ImYIcQkloY9tLwhD6guIdkoWtSusrjPfAO5bEPwKfa5GI51Qoq76gZ5/KyMtnYAARDyuSbMjeqaAJaF71oGKC4032hTlXtvMf7wAy8nfrP3zrRE7PDsqLh5vuVctAa78SFHp92394GYU0LkeCbE8dN+RW7T1wFoK7jK2HfVfLZMXtiJT3pji7jtkB7SKW8hNCeojKylZSW/AQhEyo32aPjZHomtQDkJ4DPVkPiGmcpDtpQ5u0fm0soEkODlKzECiNZM2pQq/gRdSmvObMbCkot5yjS4+uAqxl4jnzJU57lWDtFrIvkBDGJ2Y564r/pctq9uWp/QSbPgEv8uT/QaIoVeYMO723HHSzLRPVslrQiwkCU1qTFFHFCA2OlGJLZF05mGEi7pDAv2EX6PmfTdKwh8IsamEUgZsYbo+/RWKi56VDFGsZttrW3kVQ9mYEUAgitkDWnwpFO8DVU= alexey@vivobook-fedora
+            EOT
+        }
+      + name                      = "iscsi-srv"
+      + network_acceleration_type = "standard"
+      + platform_id               = "standard-v1"
+      + service_account_id        = (known after apply)
+      + status                    = (known after apply)
+      + zone                      = "ru-central1-a"
+
+      + boot_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = (known after apply)
+
+          + initialize_params {
+              + block_size  = (known after apply)
+              + description = (known after apply)
+              + image_id    = "fd81prb1447ilqb2mp3m"
+              + name        = (known after apply)
+              + size        = 10
+              + snapshot_id = (known after apply)
+              + type        = "network-hdd"
+            }
+        }
+
+      + network_interface {
+          + index              = (known after apply)
+          + ip_address         = "10.10.5.3"
+          + ipv4               = true
+          + ipv6               = (known after apply)
+          + ipv6_address       = (known after apply)
+          + mac_address        = (known after apply)
+          + nat                = false
+          + nat_ip_address     = (known after apply)
+          + nat_ip_version     = (known after apply)
+          + security_group_ids = (known after apply)
+          + subnet_id          = (known after apply)
+        }
+
+      + resources {
+          + core_fraction = 20
+          + cores         = 2
+          + memory        = 2
+        }
+
+      + scheduling_policy {
+          + preemptible = false
+        }
+
+      + secondary_disk {
+          + auto_delete = true
+          + device_name = (known after apply)
+          + disk_id     = (known after apply)
+          + mode        = "READ_WRITE"
+        }
+    }
+
+  # module.pgsql-sec-sg-create.yandex_vpc_security_group.sg will be created
+  + resource "yandex_vpc_security_group" "sg" {
+      + created_at = (known after apply)
+      + folder_id  = (known after apply)
+      + id         = (known after apply)
+      + labels     = (known after apply)
+      + name       = "pgsql-sec-sg"
+      + network_id = (known after apply)
+      + status     = (known after apply)
+    }
+
+  # module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["0"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "Разрешить весь исходящий трафик"
+      + direction              = "egress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = -1
+      + protocol               = "ANY"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "0.0.0.0/0",
+        ]
+    }
+
+  # module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["1"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "Разрешить ping"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = -1
+      + protocol               = "ICMP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "0.0.0.0/0",
+        ]
+    }
+
+  # module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["2"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "Разрешить SSH от бастионного хоста"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 22
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "172.16.16.0/24",
+        ]
+    }
+
+  # module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["3"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "PostgreSQL subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 5432
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+  # module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["4"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "etcd1 subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 2379
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+  # module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["5"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "etcd2 subnets"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 2380
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+  # module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["6"] will be created
+  + resource "yandex_vpc_security_group_rule" "sg_rules" {
+      + description            = "patroni rest api subnet-a"
+      + direction              = "ingress"
+      + from_port              = -1
+      + id                     = (known after apply)
+      + labels                 = (known after apply)
+      + port                   = 8008
+      + protocol               = "TCP"
+      + security_group_binding = (known after apply)
+      + to_port                = -1
+      + v4_cidr_blocks         = [
+          + "10.10.5.0/24",
+          + "10.10.6.0/24",
+          + "10.10.7.0/24",
+        ]
+    }
+
+Plan: 65 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+yandex_vpc_network.network1: Creating...
+yandex_vpc_gateway.nat_gateway: Creating...
+yandex_compute_disk.iscsi-disk[0]: Creating...
+yandex_dns_zone.wp-pg: Creating...
+yandex_vpc_gateway.nat_gateway: Creation complete after 1s [id=enpkq17gl6ll720pvqgp]
+yandex_dns_zone.wp-pg: Creation complete after 1s [id=dnscf0naivack07dcs8s]
+yandex_dns_recordset.wp-pg-a: Creating...
+yandex_dns_recordset.wp-pg-cname: Creating...
+yandex_dns_recordset.wp-pg-a: Creation complete after 0s [id=dnscf0naivack07dcs8s/dip-akopalev.ru./A]
+yandex_dns_recordset.wp-pg-cname: Creation complete after 0s [id=dnscf0naivack07dcs8s/www/CNAME]
+yandex_vpc_network.network1: Creation complete after 2s [id=enpt58tf4bp9oe2ac33g]
+module.bast-sec-sg-create.yandex_vpc_security_group.sg: Creating...
+yandex_vpc_route_table.rt: Creating...
+yandex_vpc_subnet.subnet-bast: Creating...
+module.ext-sec-sg-create.yandex_vpc_security_group.sg: Creating...
+module.pgsql-sec-sg-create.yandex_vpc_security_group.sg: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group.sg: Creating...
+yandex_vpc_subnet.subnet-bast: Creation complete after 0s [id=e2lhv7l36rg6id0sncbd]
+yandex_vpc_route_table.rt: Creation complete after 1s [id=enpgofu1avmm93pgtjsg]
+yandex_vpc_subnet.subnet-c: Creating...
+yandex_vpc_subnet.subnet-b: Creating...
+yandex_vpc_subnet.subnet-a: Creating...
+module.bast-sec-sg-create.yandex_vpc_security_group.sg: Creation complete after 1s [id=enptin4rp3brf93qak66]
+module.bast-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["1"]: Creating...
+module.bast-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["2"]: Creating...
+module.bast-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["0"]: Creating...
+yandex_vpc_subnet.subnet-a: Creation complete after 1s [id=e9bk1lacrckpjjkj9m8c]
+module.bast-host.yandex_compute_instance.vm: Creating...
+module.bast-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["1"]: Creation complete after 1s [id=enpnfcdr4m0ujdbk8498]
+module.bast-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["0"]: Creation complete after 1s [id=enpepf0co8d0uk3cfdjq]
+yandex_vpc_subnet.subnet-b: Creation complete after 1s [id=e2l4kivi9223vm0na3u1]
+module.bast-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["2"]: Creation complete after 1s [id=enpv7fjq4i4forf3bsda]
+module.back-sec-sg-create.yandex_vpc_security_group.sg: Creation complete after 3s [id=enpj9iu7lrafek65cp4o]
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["10"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["4"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["6"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["13"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["1"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["6"]: Creation complete after 0s [id=enpbngerr4jo2kljlqg3]
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["15"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["10"]: Creation complete after 0s [id=enp3rf3h4lt2m0uf93ig]
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["0"]: Creating...
+yandex_vpc_subnet.subnet-c: Creation complete after 3s [id=b0cofri0ttkddnf96ahl]
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["11"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["4"]: Creation complete after 1s [id=enp9fr5jbitpepo3gqmk]
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["16"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["1"]: Creation complete after 1s [id=enpuff03dvhodc7fcrns]
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["8"]: Creating...
+module.pgsql-sec-sg-create.yandex_vpc_security_group.sg: Creation complete after 4s [id=enplcan72jo5j98taind]
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["5"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["13"]: Creation complete after 2s [id=enpg503hmet6ho5omiip]
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["14"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["15"]: Creation complete after 2s [id=enpjfqkh0vrqvc0fv35j]
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["12"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["0"]: Creation complete after 2s [id=enpv9vm4tpj7pe3gt4ei]
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["7"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["11"]: Creation complete after 1s [id=enp4rgbot3s2qikbldt3]
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["3"]: Creating...
+module.ext-sec-sg-create.yandex_vpc_security_group.sg: Creation complete after 6s [id=enp4e0u7gmhcm4ci5qg8]
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["2"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["16"]: Creation complete after 2s [id=enp1fvkdhv9nq6vjlpg2]
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["9"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["8"]: Creation complete after 2s [id=enp7ran5dp33u6cmlhmg]
+yandex_lb_target_group.front-tg: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["5"]: Creation complete after 2s [id=enphv77teoo4rv83mo9i]
+yandex_lb_target_group.db-tg: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["14"]: Creation complete after 2s [id=enp9u6r7pgj33k40nbc7]
+module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["4"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["12"]: Creation complete after 2s [id=enps68jop4a03ndoa4sg]
+module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["3"]: Creating...
+module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["4"]: Creation complete after 0s [id=enpa6uqdldrfmlrci8mm]
+module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["0"]: Creating...
+yandex_compute_disk.iscsi-disk[0]: Creation complete after 10s [id=fhmbs5t4td37gkfk8k3l]
+module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["5"]: Creating...
+module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["3"]: Creation complete after 1s [id=enpt8o7ahoe8932infpi]
+module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["2"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["7"]: Creation complete after 3s [id=enpggbsfjrfcsdlatmpi]
+module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["1"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["3"]: Creation complete after 4s [id=enp1bdn1f0al1im6i6ci]
+module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["6"]: Creating...
+yandex_lb_target_group.db-tg: Creation complete after 3s [id=enpopv5s59nljn98j4vf]
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["3"]: Creating...
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["2"]: Creation complete after 3s [id=enpl9ohlncjc1e8442bv]
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["1"]: Creating...
+yandex_lb_target_group.front-tg: Creation complete after 3s [id=enp5ts27b3bhod2ipklt]
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["2"]: Creating...
+module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["0"]: Creation complete after 2s [id=enp0a1kid6r3m0a7c1tp]
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["0"]: Creating...
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["3"]: Creation complete after 0s [id=enpkk4ms31o6f4pdilfn]
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["6"]: Creating...
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["1"]: Creation complete after 0s [id=enpnvop22ih0slakcjcm]
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["5"]: Creating...
+module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["5"]: Creation complete after 2s [id=enp1s582k67nl52qhud9]
+module.back-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["9"]: Creation complete after 4s [id=enp4n9dtng1fudtmei39]
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["4"]: Creating...
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["7"]: Creating...
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["2"]: Creation complete after 1s [id=enpu72l6gr55g11f9qoi]
+yandex_lb_network_load_balancer.db-nlb: Creating...
+module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["2"]: Creation complete after 2s [id=enp2p7sg20du6415a8d1]
+yandex_lb_network_load_balancer.front-nlb: Creating...
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["0"]: Creation complete after 1s [id=enpi7eu761i65psent3t]
+module.back-hosts["back-host2"].yandex_compute_instance.vm: Creating...
+module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["1"]: Creation complete after 2s [id=enp3mb7ae4i4m9f1tdie]
+module.front-hosts["front-host2"].yandex_compute_instance.vm: Creating...
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["6"]: Creation complete after 2s [id=enpq3btm1sfi7mjet8dh]
+module.back-hosts["back-host3"].yandex_compute_instance.vm: Creating...
+module.pgsql-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["6"]: Creation complete after 2s [id=enpk2auietvkraes397m]
+module.back-hosts["back-host1"].yandex_compute_instance.vm: Creating...
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["5"]: Creation complete after 2s [id=enpu1ru2dup7hh0orf9d]
+module.db-hosts["db-host1"].yandex_compute_instance.vm: Creating...
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["4"]: Creation complete after 1s [id=enphpba3hbvbkgi7iqhp]
+module.front-hosts["front-host1"].yandex_compute_instance.vm: Creating...
+yandex_lb_network_load_balancer.db-nlb: Creation complete after 2s [id=enp4nf51hgn6p4b1iohu]
+module.front-hosts["front-host3"].yandex_compute_instance.vm: Creating...
+module.bast-host.yandex_compute_instance.vm: Still creating... [10s elapsed]
+module.ext-sec-sg-create.yandex_vpc_security_group_rule.sg_rules["7"]: Creation complete after 2s [id=enpukkcmq74ns8ehi7a1]
+module.iscsi-srv.yandex_compute_instance.vm: Creating...
+yandex_lb_network_load_balancer.front-nlb: Creation complete after 4s [id=enp1302b9gge1vsgv6mb]
+module.db-hosts["db-host3"].yandex_compute_instance.vm: Creating...
+module.back-hosts["back-host2"].yandex_compute_instance.vm: Still creating... [10s elapsed]
+module.front-hosts["front-host2"].yandex_compute_instance.vm: Still creating... [10s elapsed]
+module.back-hosts["back-host3"].yandex_compute_instance.vm: Still creating... [10s elapsed]
+module.back-hosts["back-host1"].yandex_compute_instance.vm: Still creating... [10s elapsed]
+module.db-hosts["db-host1"].yandex_compute_instance.vm: Still creating... [10s elapsed]
+module.front-hosts["front-host1"].yandex_compute_instance.vm: Still creating... [10s elapsed]
+module.front-hosts["front-host3"].yandex_compute_instance.vm: Still creating... [10s elapsed]
+module.bast-host.yandex_compute_instance.vm: Still creating... [20s elapsed]
+module.iscsi-srv.yandex_compute_instance.vm: Still creating... [10s elapsed]
+module.db-hosts["db-host3"].yandex_compute_instance.vm: Still creating... [10s elapsed]
+module.back-hosts["back-host2"].yandex_compute_instance.vm: Still creating... [20s elapsed]
+module.front-hosts["front-host2"].yandex_compute_instance.vm: Still creating... [20s elapsed]
+module.back-hosts["back-host3"].yandex_compute_instance.vm: Still creating... [20s elapsed]
+module.back-hosts["back-host1"].yandex_compute_instance.vm: Still creating... [20s elapsed]
+module.db-hosts["db-host1"].yandex_compute_instance.vm: Still creating... [20s elapsed]
+module.front-hosts["front-host1"].yandex_compute_instance.vm: Still creating... [20s elapsed]
+module.front-hosts["front-host3"].yandex_compute_instance.vm: Still creating... [20s elapsed]
+module.bast-host.yandex_compute_instance.vm: Still creating... [30s elapsed]
+module.iscsi-srv.yandex_compute_instance.vm: Still creating... [20s elapsed]
+module.back-hosts["back-host2"].yandex_compute_instance.vm: Creation complete after 23s [id=epdbiq309ujbm74rjcab]
+module.db-hosts["db-host2"].yandex_compute_instance.vm: Creating...
+module.db-hosts["db-host3"].yandex_compute_instance.vm: Still creating... [20s elapsed]
+module.front-hosts["front-host2"].yandex_compute_instance.vm: Still creating... [30s elapsed]
+module.back-hosts["back-host3"].yandex_compute_instance.vm: Still creating... [30s elapsed]
+module.back-hosts["back-host1"].yandex_compute_instance.vm: Still creating... [30s elapsed]
+module.db-hosts["db-host1"].yandex_compute_instance.vm: Still creating... [30s elapsed]
+module.back-hosts["back-host3"].yandex_compute_instance.vm: Creation complete after 30s [id=ef3srt2va23bdbedo1vh]
+module.front-hosts["front-host1"].yandex_compute_instance.vm: Still creating... [30s elapsed]
+module.front-hosts["front-host3"].yandex_compute_instance.vm: Still creating... [30s elapsed]
+module.bast-host.yandex_compute_instance.vm: Still creating... [40s elapsed]
+module.front-hosts["front-host3"].yandex_compute_instance.vm: Creation complete after 30s [id=ef3tgfntkblknahb74g5]
+module.iscsi-srv.yandex_compute_instance.vm: Still creating... [30s elapsed]
+module.db-hosts["db-host2"].yandex_compute_instance.vm: Still creating... [10s elapsed]
+module.db-hosts["db-host3"].yandex_compute_instance.vm: Still creating... [30s elapsed]
+module.front-hosts["front-host2"].yandex_compute_instance.vm: Creation complete after 37s [id=epdetggf9hqo0v737uqi]
+module.db-hosts["db-host3"].yandex_compute_instance.vm: Creation complete after 35s [id=ef31cuii2ue9b22dc3tr]
+module.back-hosts["back-host1"].yandex_compute_instance.vm: Creation complete after 38s [id=fhmj6djt2omvov2sqbsq]
+module.db-hosts["db-host1"].yandex_compute_instance.vm: Still creating... [40s elapsed]
+module.front-hosts["front-host1"].yandex_compute_instance.vm: Still creating... [40s elapsed]
+module.iscsi-srv.yandex_compute_instance.vm: Creation complete after 40s [id=fhmi3a3im0hd32u0ol6d]
+module.bast-host.yandex_compute_instance.vm: Still creating... [50s elapsed]
+module.db-hosts["db-host1"].yandex_compute_instance.vm: Creation complete after 42s [id=fhmduig9pdqq6qjd72ni]
+module.db-hosts["db-host2"].yandex_compute_instance.vm: Still creating... [20s elapsed]
+module.bast-host.yandex_compute_instance.vm: Creation complete after 56s [id=epdmfv5k82biq1l2kn8e]
+module.front-hosts["front-host1"].yandex_compute_instance.vm: Still creating... [50s elapsed]
+module.db-hosts["db-host2"].yandex_compute_instance.vm: Creation complete after 28s [id=epdmt5f94cgj9bp3pnqb]
+module.front-hosts["front-host1"].yandex_compute_instance.vm: Creation complete after 58s [id=fhmmdmqa6b8p5c30kigf]
+
+Apply complete! Resources: 65 added, 0 changed, 0 destroyed.
+

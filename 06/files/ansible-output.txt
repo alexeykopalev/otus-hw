@@ -1,0 +1,618 @@
+[alexey@ask-fedora38-vb 06]$ ansible-playbook ansible/playbook.yml 
+
+PLAY [Install Chrony] *******************************************************************************************************************************************************************************
+
+TASK [chrony : Installing Chrony] *******************************************************************************************************************************************************************
+ok: [back-host1]
+ok: [back-host2]
+ok: [front-host1]
+ok: [back-host3]
+ok: [iscsi_srv]
+ok: [front-host2]
+ok: [db-host1]
+ok: [front-host3]
+ok: [db-host3]
+ok: [db-host2]
+
+TASK [chrony : Start Chronyd Service] ***************************************************************************************************************************************************************
+ok: [back-host1]
+ok: [back-host2]
+ok: [front-host1]
+ok: [iscsi_srv]
+ok: [back-host3]
+ok: [front-host2]
+ok: [db-host1]
+ok: [db-host2]
+ok: [front-host3]
+ok: [db-host3]
+
+TASK [chrony : Set timezone to Europe/Moscow] *******************************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [front-host1]
+changed: [back-host3]
+changed: [iscsi_srv]
+changed: [front-host2]
+changed: [db-host1]
+changed: [db-host2]
+changed: [front-host3]
+changed: [db-host3]
+
+RUNNING HANDLER [chrony : Restart Chronyd] **********************************************************************************************************************************************************
+changed: [back-host1]
+changed: [front-host1]
+changed: [back-host2]
+changed: [iscsi_srv]
+changed: [back-host3]
+changed: [front-host2]
+changed: [db-host1]
+changed: [front-host3]
+changed: [db-host2]
+changed: [db-host3]
+
+PLAY [install targetcli, create lun] ****************************************************************************************************************************************************************
+
+TASK [targetcli : Install targetcli] ****************************************************************************************************************************************************************
+changed: [iscsi_srv]
+
+TASK [targetcli : Gather targetcli status] **********************************************************************************************************************************************************
+fatal: [iscsi_srv]: FAILED! => {"changed": true, "cmd": ["targetcli", "/backstores/block/disk01", "info"], "delta": "0:00:00.333592", "end": "2024-02-06 09:22:58.121355", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:22:57.787763", "stderr": "No such path /backstores/block/disk01", "stderr_lines": ["No such path /backstores/block/disk01"], "stdout": "Warning: Could not load preferences file /root/.targetcli/prefs.bin.", "stdout_lines": ["Warning: Could not load preferences file /root/.targetcli/prefs.bin."]}
+...ignoring
+
+TASK [targetcli : Run targetcli configure] **********************************************************************************************************************************************************
+changed: [iscsi_srv] => (item=targetcli /backstores/block create disk01 /dev/vdb)
+changed: [iscsi_srv] => (item=targetcli /iscsi create iqn.2023-11.ru.otus:storage.target00)
+changed: [iscsi_srv] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/luns create /backstores/block/disk01 lun=1)
+changed: [iscsi_srv] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:cf70d4c706e)
+changed: [iscsi_srv] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:f5cfb68ca8f)
+changed: [iscsi_srv] => (item=targetcli /iscsi/iqn.2023-11.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:e77b7b4d46a9)
+
+PLAY [install iscsi-client] *************************************************************************************************************************************************************************
+
+TASK [iscsi-client : Install open-iscsi] ************************************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [iscsi-client : change InitiatorName pcs1] *****************************************************************************************************************************************************
+skipping: [back-host2]
+skipping: [back-host3]
+changed: [back-host1]
+
+TASK [iscsi-client : change InitiatorName pcs2] *****************************************************************************************************************************************************
+skipping: [back-host1]
+skipping: [back-host3]
+changed: [back-host2]
+
+TASK [iscsi-client : change InitiatorName pcs3] *****************************************************************************************************************************************************
+skipping: [back-host1]
+skipping: [back-host2]
+changed: [back-host3]
+
+TASK [iscsi-client : iscsi_login] *******************************************************************************************************************************************************************
+changed: [back-host1] => (item=iscsiadm -m discovery -t st -p 10.10.5.3)
+changed: [back-host2] => (item=iscsiadm -m discovery -t st -p 10.10.5.3)
+changed: [back-host3] => (item=iscsiadm -m discovery -t st -p 10.10.5.3)
+changed: [back-host1] => (item=iscsiadm -m node -l -T iqn.2023-11.ru.otus:storage.target00)
+changed: [back-host2] => (item=iscsiadm -m node -l -T iqn.2023-11.ru.otus:storage.target00)
+changed: [back-host3] => (item=iscsiadm -m node -l -T iqn.2023-11.ru.otus:storage.target00)
+
+RUNNING HANDLER [iscsi-client : start_iscsi] ********************************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+RUNNING HANDLER [iscsi-client : restart_iscsid] *****************************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+PLAY [install ha-cluster] ***************************************************************************************************************************************************************************
+
+TASK [ha-cluster : Put SELinux in permissive mode, logging actions that would be blocked.] **********************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [ha-cluster : Enable highavailability repository (AlmaLinux)] **********************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [ha-cluster : Enable resilientstorage repository (AlmaLinux)] **********************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [ha-cluster : Install the Packages] ************************************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host3]
+changed: [back-host2]
+
+TASK [ha-cluster : Add 'use_lvmlockd = 1' to LVM Confifuration File] ********************************************************************************************************************************
+changed: [back-host1] => (item={'regexp': 'system_id_source =', 'line': "system_id_source = 'uname'"})
+changed: [back-host3] => (item={'regexp': 'system_id_source =', 'line': "system_id_source = 'uname'"})
+changed: [back-host2] => (item={'regexp': 'system_id_source =', 'line': "system_id_source = 'uname'"})
+changed: [back-host1] => (item={'regexp': 'use_lvmlockd =', 'line': 'use_lvmlockd = 1'})
+changed: [back-host3] => (item={'regexp': 'use_lvmlockd =', 'line': 'use_lvmlockd = 1'})
+changed: [back-host2] => (item={'regexp': 'use_lvmlockd =', 'line': 'use_lvmlockd = 1'})
+changed: [back-host1] => (item={'regexp': 'use_devicesfile =', 'line': 'use_devicesfile = 1'})
+changed: [back-host2] => (item={'regexp': 'use_devicesfile =', 'line': 'use_devicesfile = 1'})
+changed: [back-host3] => (item={'regexp': 'use_devicesfile =', 'line': 'use_devicesfile = 1'})
+
+TASK [ha-cluster : Add2 'locking_type = 1' to LVM Confifuration File] *******************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [ha-cluster : Start the lvmlockd service] ******************************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [ha-cluster : Create directories for cluster mount] ********************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [ha-cluster : Start the pcs service] ***********************************************************************************************************************************************************
+changed: [back-host2]
+changed: [back-host1]
+changed: [back-host3]
+
+TASK [ha-cluster : Set the password for the use hacluster] ******************************************************************************************************************************************
+[DEPRECATION WARNING]: Encryption using the Python crypt module is deprecated. The Python crypt module is deprecated and will be removed from Python 3.13. Install the passlib library for continued
+ encryption functionality. This feature will be removed in version 2.17. Deprecation warnings can be disabled by setting deprecation_warnings=False in ansible.cfg.
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [ha-cluster : Gather cluster status] ***********************************************************************************************************************************************************
+fatal: [back-host1]: FAILED! => {"changed": true, "cmd": ["pcs", "cluster", "status"], "delta": "0:00:00.615823", "end": "2024-02-06 09:24:40.954675", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:24:40.338852", "stderr": "Error: cluster is not currently running on this node", "stderr_lines": ["Error: cluster is not currently running on this node"], "stdout": "", "stdout_lines": []}
+...ignoring
+fatal: [back-host2]: FAILED! => {"changed": true, "cmd": ["pcs", "cluster", "status"], "delta": "0:00:00.811451", "end": "2024-02-06 09:24:41.164688", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:24:40.353237", "stderr": "Error: cluster is not currently running on this node", "stderr_lines": ["Error: cluster is not currently running on this node"], "stdout": "", "stdout_lines": []}
+...ignoring
+fatal: [back-host3]: FAILED! => {"changed": true, "cmd": ["pcs", "cluster", "status"], "delta": "0:00:00.885371", "end": "2024-02-06 09:24:41.422553", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:24:40.537182", "stderr": "Error: cluster is not currently running on this node", "stderr_lines": ["Error: cluster is not currently running on this node"], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [ha-cluster : Authenticate the cluster] ********************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Setup the HA-Cluster] ************************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Start the HA-Cluster] ************************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Enable the HA-Cluster] ***********************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Setting stonith-enabled=false] ***************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Setting 'No Quorum' Policy] ******************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Gather dlm resource status] ******************************************************************************************************************************************************
+fatal: [back-host1]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "dlm-clone"], "delta": "0:00:00.584199", "end": "2024-02-06 09:25:06.537839", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:25:05.953640", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'dlm-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'dlm-clone'"]}
+...ignoring
+fatal: [back-host2]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "dlm-clone"], "delta": "0:00:00.786749", "end": "2024-02-06 09:25:06.816935", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:25:06.030186", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'dlm-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'dlm-clone'"]}
+...ignoring
+fatal: [back-host3]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "dlm-clone"], "delta": "0:00:00.792740", "end": "2024-02-06 09:25:06.958103", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:25:06.165363", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'dlm-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'dlm-clone'"]}
+...ignoring
+
+TASK [ha-cluster : Creating 'dlm' Resource] *********************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Gather lvmlockd resource status] *************************************************************************************************************************************************
+fatal: [back-host1]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "lvmlockd-clone"], "delta": "0:00:00.565676", "end": "2024-02-06 09:25:10.511741", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:25:09.946065", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'lvmlockd-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'lvmlockd-clone'"]}
+...ignoring
+fatal: [back-host2]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "lvmlockd-clone"], "delta": "0:00:00.765667", "end": "2024-02-06 09:25:10.787399", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:25:10.021732", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'lvmlockd-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'lvmlockd-clone'"]}
+...ignoring
+fatal: [back-host3]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "lvmlockd-clone"], "delta": "0:00:00.799386", "end": "2024-02-06 09:25:10.965654", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:25:10.166268", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'lvmlockd-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'lvmlockd-clone'"]}
+...ignoring
+
+TASK [ha-cluster : Creating lvmlockd Resource] ******************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Creating First Constraint] *******************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Pause] ***************************************************************************************************************************************************************************
+Pausing for 10 seconds
+(ctrl+C then 'C' = continue early, ctrl+C then 'A' = abort)
+ok: [back-host1]
+
+TASK [ha-cluster : Gather pvs /dev/sda] *************************************************************************************************************************************************************
+fatal: [back-host1]: FAILED! => {"changed": true, "cmd": "pvs | grep /dev/sda", "delta": "0:00:01.077668", "end": "2024-02-06 09:25:26.799775", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:25:25.722107", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [ha-cluster : Creating Physical Volume] ********************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Gather vgs /dev/sda] *************************************************************************************************************************************************************
+fatal: [back-host1]: FAILED! => {"changed": true, "cmd": "vgs | grep cluster_vg", "delta": "0:00:00.034701", "end": "2024-02-06 09:25:29.231655", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:25:29.196954", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [ha-cluster : Creating Volume Group] ***********************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : start lock manager for shared] ***************************************************************************************************************************************************
+skipping: [back-host1]
+skipping: [back-host3]
+changed: [back-host2]
+
+TASK [ha-cluster : Pause] ***************************************************************************************************************************************************************************
+Pausing for 10 seconds
+(ctrl+C then 'C' = continue early, ctrl+C then 'A' = abort)
+ok: [back-host1]
+
+TASK [ha-cluster : Gather lvs | grep cluster_lv] ****************************************************************************************************************************************************
+fatal: [back-host1]: FAILED! => {"changed": true, "cmd": "lvs | grep cluster_lv", "delta": "0:00:00.035322", "end": "2024-02-06 09:25:48.065433", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:25:48.030111", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [ha-cluster : Creating Logical Volume] *********************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Formatting Logical Volume With GFS2] *********************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Gather cluster_vg-clone resource status] *****************************************************************************************************************************************
+fatal: [back-host1]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "cluster_vg-clone"], "delta": "0:00:00.595451", "end": "2024-02-06 09:25:54.739121", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:25:54.143670", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'cluster_vg-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'cluster_vg-clone'"]}
+...ignoring
+fatal: [back-host2]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "cluster_vg-clone"], "delta": "0:00:00.788128", "end": "2024-02-06 09:25:54.979618", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:25:54.191490", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'cluster_vg-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'cluster_vg-clone'"]}
+...ignoring
+fatal: [back-host3]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "cluster_vg-clone"], "delta": "0:00:00.791082", "end": "2024-02-06 09:25:55.189992", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:25:54.398910", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'cluster_vg-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'cluster_vg-clone'"]}
+...ignoring
+
+TASK [ha-cluster : create LVM-activate resource] ****************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : set start order as [locking] → [shared_vg]] **************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : set that [shared_vg] and [locking] start on a same node] *************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Gather clusterfs-clone resource status] ******************************************************************************************************************************************
+fatal: [back-host1]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "clusterfs-clone"], "delta": "0:00:00.602715", "end": "2024-02-06 09:26:02.494013", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:26:01.891298", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'clusterfs-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'clusterfs-clone'"]}
+...ignoring
+fatal: [back-host2]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "clusterfs-clone"], "delta": "0:00:00.814246", "end": "2024-02-06 09:26:02.679179", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:26:01.864933", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'clusterfs-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'clusterfs-clone'"]}
+...ignoring
+fatal: [back-host3]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "clusterfs-clone"], "delta": "0:00:00.993740", "end": "2024-02-06 09:26:02.962901", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:26:01.969161", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'clusterfs-clone'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'clusterfs-clone'"]}
+...ignoring
+
+TASK [ha-cluster : Creating Cluster File System] ****************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : set start order as [shared_vg] → [shared_fs]] ************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : set that [shared_fs] and [shared_vg] start on a same node] ***********************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Check haproxy.cfg.backup] ********************************************************************************************************************************************************
+ok: [back-host1]
+ok: [back-host2]
+ok: [back-host3]
+
+TASK [ha-cluster : Backup default haproxy config file] **********************************************************************************************************************************************
+changed: [back-host2]
+changed: [back-host1]
+changed: [back-host3]
+
+TASK [ha-cluster : Template custom haproxy config file] *********************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [ha-cluster : Start haproxy service] ***********************************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [ha-cluster : Gather virtual IP resource status] ***********************************************************************************************************************************************
+fatal: [back-host1]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "HAProxy"], "delta": "0:00:00.601208", "end": "2024-02-06 09:26:20.285176", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:26:19.683968", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'HAProxy'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'HAProxy'"]}
+...ignoring
+fatal: [back-host2]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "HAProxy"], "delta": "0:00:00.799262", "end": "2024-02-06 09:26:20.484092", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:26:19.684830", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'HAProxy'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'HAProxy'"]}
+...ignoring
+fatal: [back-host3]: FAILED! => {"changed": true, "cmd": ["pcs", "resource", "show", "HAProxy"], "delta": "0:00:00.815603", "end": "2024-02-06 09:26:20.701020", "msg": "non-zero return code", "rc": 1, "start": "2024-02-06 09:26:19.885417", "stderr": "Error: No resource found", "stderr_lines": ["Error: No resource found"], "stdout": "Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.\nWarning: Unable to find resource 'HAProxy'", "stdout_lines": ["Warning: This command is deprecated and will be removed. Please use 'pcs resource config' instead.", "Warning: Unable to find resource 'HAProxy'"]}
+...ignoring
+
+TASK [ha-cluster : Create virtual IP (pcs resource IPaddr2)] ****************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Create pcs resource HAProxy] *****************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [ha-cluster : Combine VirtualIP and HAProxy for collaboration] *********************************************************************************************************************************
+changed: [back-host1]
+
+PLAY [install pgsql cluster] ************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] ******************************************************************************************************************************************************************************
+ok: [db-host2]
+ok: [db-host1]
+ok: [db-host3]
+
+TASK [pgsql-cluster : Put SELinux in permissive mode, logging actions that would be blocked.] *******************************************************************************************************
+changed: [db-host2]
+changed: [db-host1]
+changed: [db-host3]
+
+TASK [pgsql-cluster : Install support apps] *********************************************************************************************************************************************************
+changed: [db-host1]
+changed: [db-host3]
+changed: [db-host2]
+
+TASK [pgsql-cluster : Import PostgreSQL Repository KEY] *********************************************************************************************************************************************
+changed: [db-host1]
+changed: [db-host3]
+changed: [db-host2]
+
+TASK [pgsql-cluster : Installing PostgreSQL Repository] *********************************************************************************************************************************************
+changed: [db-host3]
+changed: [db-host1]
+changed: [db-host2]
+
+TASK [pgsql-cluster : Install 'dnf-command(config-manager)'] ****************************************************************************************************************************************
+changed: [db-host3]
+changed: [db-host1]
+changed: [db-host2]
+
+TASK [pgsql-cluster : Install etcd] *****************************************************************************************************************************************************************
+changed: [db-host1]
+changed: [db-host3]
+changed: [db-host2]
+
+TASK [pgsql-cluster : Check etcd.conf.old] **********************************************************************************************************************************************************
+ok: [db-host2]
+ok: [db-host1]
+ok: [db-host3]
+
+TASK [pgsql-cluster : Backup config file /etc/etcd/etcd.conf to /etc/etcd/etcd.conf.old] ************************************************************************************************************
+changed: [db-host2]
+changed: [db-host1]
+changed: [db-host3]
+
+TASK [pgsql-cluster : Copy /etc/etcd/etcd.conf] *****************************************************************************************************************************************************
+changed: [db-host2]
+changed: [db-host1]
+changed: [db-host3]
+
+TASK [pgsql-cluster : Start etcd] *******************************************************************************************************************************************************************
+changed: [db-host2]
+changed: [db-host1]
+changed: [db-host3]
+
+TASK [pgsql-cluster : Disable the built-in PostgreSQL module] ***************************************************************************************************************************************
+changed: [db-host1] => (item=dnf -qy module disable postgresql)
+changed: [db-host2] => (item=dnf -qy module disable postgresql)
+changed: [db-host3] => (item=dnf -qy module disable postgresql)
+
+TASK [pgsql-cluster : Install PostgreSQL-14] ********************************************************************************************************************************************************
+changed: [db-host1]
+changed: [db-host3]
+changed: [db-host2]
+
+TASK [pgsql-cluster : Install python3 python3-devel python3-pip gcc] ********************************************************************************************************************************
+changed: [db-host1]
+changed: [db-host3]
+changed: [db-host2]
+
+TASK [pgsql-cluster : Install testresources, setuptools --upgrade] **********************************************************************************************************************************
+changed: [db-host1]
+changed: [db-host3]
+changed: [db-host2]
+
+TASK [pgsql-cluster : Install psycopg2 python3-etcd] ************************************************************************************************************************************************
+changed: [db-host1]
+changed: [db-host2]
+changed: [db-host3]
+
+TASK [pgsql-cluster : Install EPEL release] *********************************************************************************************************************************************************
+changed: [db-host1]
+changed: [db-host2]
+changed: [db-host3]
+
+TASK [pgsql-cluster : Install patroni patroni-etcd watchdog] ****************************************************************************************************************************************
+changed: [db-host1]
+changed: [db-host3]
+changed: [db-host2]
+
+TASK [pgsql-cluster : Create a directory /etc/patroni, if it does not exist] ************************************************************************************************************************
+ok: [db-host2]
+ok: [db-host1]
+ok: [db-host3]
+
+TASK [pgsql-cluster : Copy /usr/share/doc/patroni/postgres0.yml to /etc/patroni/patroni.yml and backup file] ****************************************************************************************
+changed: [db-host2] => (item=patroni.yml)
+changed: [db-host1] => (item=patroni.yml)
+changed: [db-host3] => (item=patroni.yml)
+changed: [db-host2] => (item=patroni.yml.old)
+changed: [db-host1] => (item=patroni.yml.old)
+changed: [db-host3] => (item=patroni.yml.old)
+
+TASK [pgsql-cluster : Copy /etc/patroni/patroni.yml] ************************************************************************************************************************************************
+changed: [db-host2]
+changed: [db-host1]
+changed: [db-host3]
+
+TASK [pgsql-cluster : Start patroni] ****************************************************************************************************************************************************************
+changed: [db-host2]
+changed: [db-host1]
+changed: [db-host3]
+
+TASK [pgsql-cluster : Pause] ************************************************************************************************************************************************************************
+Pausing for 20 seconds
+(ctrl+C then 'C' = continue early, ctrl+C then 'A' = abort)
+ok: [db-host1]
+
+TASK [pgsql-cluster : Create a database for wordpress] **********************************************************************************************************************************************
+[WARNING]: Module remote_tmp /var/lib/pgsql/.ansible/tmp did not exist and was created with a mode of 0700, this may cause issues when running as another user. To avoid this, create the remote_tmp
+dir with the correct permissions manually
+changed: [db-host1]
+
+TASK [pgsql-cluster : create a user with super prvileges] *******************************************************************************************************************************************
+changed: [db-host1]
+
+TASK [pgsql-cluster : GRANT ALL PRIVILEGES ON DATABASE] *********************************************************************************************************************************************
+changed: [db-host1]
+
+PLAY [install-wordpress] ****************************************************************************************************************************************************************************
+
+TASK [wordpress : Put SELinux in permissive mode, logging actions that would be blocked.] ***********************************************************************************************************
+ok: [back-host1]
+ok: [back-host2]
+ok: [back-host3]
+
+TASK [wordpress : Installing Nginx Repository] ******************************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [wordpress : install Nginx] ********************************************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [wordpress : Import Remi KEY] ******************************************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [wordpress : Installing Remi Repository] *******************************************************************************************************************************************************
+changed: [back-host3]
+changed: [back-host1]
+changed: [back-host2]
+
+TASK [wordpress : Enable PHP Remi Repository] *******************************************************************************************************************************************************
+changed: [back-host1] => (item=dnf module reset php -y)
+changed: [back-host3] => (item=dnf module reset php -y)
+changed: [back-host1] => (item=dnf module enable php:remi-8.2 -y)
+changed: [back-host2] => (item=dnf module reset php -y)
+changed: [back-host3] => (item=dnf module enable php:remi-8.2 -y)
+changed: [back-host2] => (item=dnf module enable php:remi-8.2 -y)
+
+TASK [wordpress : Install php-fpm and PHP extensions] ***********************************************************************************************************************************************
+changed: [back-host3]
+changed: [back-host1]
+changed: [back-host2]
+
+TASK [wordpress : Install php-fpm and PHP extensions] ***********************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host3]
+changed: [back-host2]
+
+TASK [wordpress : change user in /etc/php-fpm.d/www.conf] *******************************************************************************************************************************************
+changed: [back-host2]
+changed: [back-host1]
+changed: [back-host3]
+
+TASK [wordpress : change group in /etc/php-fpm.d/www.conf] ******************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [wordpress : Check exist dip-akopalev.ru.conf] *************************************************************************************************************************************************
+ok: [back-host1]
+ok: [back-host2]
+ok: [back-host3]
+
+TASK [wordpress : Copy wordpress conf] **************************************************************************************************************************************************************
+changed: [back-host2]
+changed: [back-host1]
+changed: [back-host3]
+
+TASK [wordpress : Check exist /root/latest.tar.gz] **************************************************************************************************************************************************
+ok: [back-host1]
+ok: [back-host2]
+ok: [back-host3]
+
+TASK [wordpress : Download wordpress] ***************************************************************************************************************************************************************
+changed: [back-host1]
+
+TASK [wordpress : Check exist /var/www/wordpress] ***************************************************************************************************************************************************
+ok: [back-host2]
+ok: [back-host1]
+ok: [back-host3]
+
+TASK [wordpress : Extract wordpress] ****************************************************************************************************************************************************************
+changed: [back-host1] => (item=tar -xzf /root/latest.tar.gz)
+changed: [back-host1] => (item=mv /home/akopalev/wordpress /var/www/)
+changed: [back-host1] => (item=chown -R nginx:nginx /var/www/wordpress)
+
+TASK [wordpress : Check exist /var/www/wordpress/wp-content/db.php] *********************************************************************************************************************************
+ok: [back-host1]
+ok: [back-host2]
+ok: [back-host3]
+
+TASK [wordpress : Extract wordpress] ****************************************************************************************************************************************************************
+changed: [back-host1] => (item=git clone https://github.com/kevinoid/postgresql-for-wordpress.git)
+changed: [back-host1] => (item=mv /home/akopalev/postgresql-for-wordpress/pg4wp /var/www/wordpress/wp-content/)
+changed: [back-host1] => (item=rm -rf postgresql-for-wordpress)
+changed: [back-host1] => (item=cp /var/www/wordpress/wp-content/pg4wp/db.php /var/www/wordpress/wp-content/db.php)
+changed: [back-host1] => (item=chown -R nginx:nginx /var/www/wordpress)
+
+TASK [wordpress : Template a file to /var/www/wordpress/wp-config.php] ******************************************************************************************************************************
+changed: [back-host1]
+
+TASK [wordpress : Start Nginx Service] **************************************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+TASK [wordpress : Start php-fpm Service] ************************************************************************************************************************************************************
+changed: [back-host1]
+changed: [back-host2]
+changed: [back-host3]
+
+PLAY [install-proxy] ********************************************************************************************************************************************************************************
+
+TASK [front : Put SELinux in permissive mode, logging actions that would be blocked.] ***************************************************************************************************************
+changed: [front-host2]
+changed: [front-host1]
+changed: [front-host3]
+
+TASK [front : Installing Nginx Repository] **********************************************************************************************************************************************************
+changed: [front-host2]
+changed: [front-host1]
+changed: [front-host3]
+
+TASK [front : install Nginx] ************************************************************************************************************************************************************************
+changed: [front-host1]
+changed: [front-host3]
+changed: [front-host2]
+
+TASK [front : Check exist proxy_params] *************************************************************************************************************************************************************
+ok: [front-host2]
+ok: [front-host1]
+ok: [front-host3]
+
+TASK [front : Copy proxy_params] ********************************************************************************************************************************************************************
+changed: [front-host1]
+changed: [front-host2]
+changed: [front-host3]
+
+TASK [front : Template nginx config files] **********************************************************************************************************************************************************
+changed: [front-host1]
+changed: [front-host2]
+changed: [front-host3]
+
+TASK [front : Start Nginx Service] ******************************************************************************************************************************************************************
+changed: [front-host1]
+changed: [front-host2]
+changed: [front-host3]
+
+PLAY RECAP ******************************************************************************************************************************************************************************************
+back-host1                 : ok=77   changed=67   unreachable=0    failed=0    skipped=3    rescued=0    ignored=9   
+back-host2                 : ok=47   changed=39   unreachable=0    failed=0    skipped=2    rescued=0    ignored=6   
+back-host3                 : ok=46   changed=38   unreachable=0    failed=0    skipped=3    rescued=0    ignored=6   
+db-host1                   : ok=30   changed=24   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+db-host2                   : ok=26   changed=21   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+db-host3                   : ok=26   changed=21   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+front-host1                : ok=11   changed=8    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+front-host2                : ok=11   changed=8    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+front-host3                : ok=11   changed=8    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+iscsi_srv                  : ok=7    changed=5    unreachable=0    failed=0    skipped=0    rescued=0    ignored=1   
+
