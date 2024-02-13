@@ -1,0 +1,154 @@
+- name: Put SELinux in permissive mode, logging actions that would be blocked.
+  ansible.posix.selinux:
+    policy: targeted
+    state: permissive
+
+- name: Installing Nginx Repository
+  ansible.builtin.yum_repository:
+    name: nginx-stable
+    description: nginx stable repo
+    file: nginx
+    baseurl: http://nginx.org/packages/centos/$releasever/$basearch/
+    gpgkey: https://nginx.org/keys/nginx_signing.key
+    gpgcheck: yes
+    enabled: yes
+    module_hotfixes: true
+
+- name: install Nginx
+  ansible.builtin.dnf:
+    name: 
+      - nginx
+    state: latest
+
+- name: Import Remi KEY
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://rpms.remirepo.net/enterprise/8/RPM-GPG-KEY-remi
+
+- name: Installing Remi Repository
+  ansible.builtin.yum:
+    name: https://rpms.remirepo.net/enterprise/remi-release-8.rpm
+    state: latest
+    update_cache: yes
+
+- name: Enable PHP Remi Repository
+  ansible.builtin.command: "{{ item }}"
+  with_items: 
+    - dnf module reset php -y
+    - dnf module enable php:remi-8.2 -y
+
+- name: Install php-fpm and PHP extensions
+  ansible.builtin.dnf:
+    name:
+      - php-fpm
+      - php-json 
+      - php-mysqlnd
+      - php-pgsql
+      - php-curl
+      - php-dom
+      - php-exif
+      - php-fileinfo
+      - php-hash
+      - php-igbinary
+      - php-imagick
+      - php-intl
+      - php-mbstring
+      - php-openssl
+      - php-pcre
+      - php-xml
+      - php-zip
+    state: latest
+
+- name: Install support apps
+  ansible.builtin.dnf:
+    name:
+      - git
+      - nano 
+    state: latest
+
+- name: change user in /etc/php-fpm.d/www.conf
+  ansible.builtin.lineinfile: 
+    dest: /etc/php-fpm.d/www.conf
+    regexp: '^user ='
+    insertbefore: BOF
+    line: 'user = nginx'
+
+- name: change group in /etc/php-fpm.d/www.conf
+  ansible.builtin.lineinfile: dest=/etc/php-fpm.d/www.conf
+    regexp='^group ='
+    insertbefore=BOF
+    line='group = nginx'
+
+- name: Check exist dip-akopalev.ru.conf 
+  ansible.builtin.stat:
+    path: /etc/nginx/conf.d/dip-akopalev.ru.conf
+  register: result_site_conf
+
+- name: Copy wordpress conf
+  ansible.builtin.copy:
+    src: files/wordpress_new
+    dest: /etc/nginx/conf.d/dip-akopalev.ru.conf
+  when: not result_site_conf.stat.exists
+
+- name: Check exist /root/latest.tar.gz 
+  ansible.builtin.stat:
+    path: /root/latest.tar.gz
+  register: result_wordpress_distr
+
+- name: Download wordpress
+  ansible.builtin.get_url:
+    url: https://ru.wordpress.org/latest-ru_RU.tar.gz
+    dest: /root/latest.tar.gz
+  run_once: true
+  when: not result_wordpress_distr.stat.exists
+
+- name: Check exist /var/www/wordpress 
+  ansible.builtin.stat:
+    path: /var/www/wordpress
+  register: result_wordpress_site
+
+- name: Extract wordpress
+  ansible.builtin.command: "{{ item }}"
+  with_items:
+    - tar -xzf /root/latest.tar.gz
+    - mv /home/akopalev/wordpress /var/www/
+    - chown -R nginx:nginx /var/www/wordpress
+  run_once: true
+  when: not result_wordpress_site.stat.exists
+
+- name: Check exist /var/www/wordpress/wp-content/db.php
+  ansible.builtin.stat:
+    path: /var/www/wordpress/wp-content/db.php
+  register: result_db_php
+
+- name: Extract wordpress
+  ansible.builtin.command: "{{ item }}"
+  with_items:
+    - git clone https://github.com/kevinoid/postgresql-for-wordpress.git
+    - mv /home/akopalev/postgresql-for-wordpress/pg4wp /var/www/wordpress/wp-content/
+    - rm -rf postgresql-for-wordpress
+    - cp /var/www/wordpress/wp-content/pg4wp/db.php /var/www/wordpress/wp-content/db.php
+    - chown -R nginx:nginx /var/www/wordpress
+  run_once: true
+  when: not result_db_php.stat.exists
+
+- name: Template a file to /var/www/wordpress/wp-config.php
+  ansible.builtin.template:
+    src: wp-config.php.j2
+    dest: /var/www/wordpress/wp-config.php
+    owner: nginx
+    group: nginx
+    mode: '0644'
+  run_once: true
+
+- name: Start Nginx Service
+  ansible.builtin.systemd:
+    name: nginx
+    state: restarted
+    enabled: yes
+
+- name: Start php-fpm Service
+  ansible.builtin.systemd:
+    name: php-fpm
+    state: restarted
+    enabled: yes

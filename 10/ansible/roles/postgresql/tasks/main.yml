@@ -1,0 +1,89 @@
+- name: Put SELinux in permissive mode, logging actions that would be blocked.
+  ansible.posix.selinux:
+    policy: targeted
+    state: permissive
+
+- name: Install support apps
+  ansible.builtin.dnf:
+    name:
+      - git
+      - nano 
+      - python3-psycopg2
+    state: latest
+
+- name: Import PostgreSQL Repository KEY
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://download.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-RHEL
+
+- name: Installing PostgreSQL Repository
+  ansible.builtin.yum:
+    name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+    state: latest
+    update_cache: yes
+
+- name: Disable the built-in PostgreSQL module
+  ansible.builtin.command: "{{ item }}"
+  with_items: 
+    - dnf -qy module disable postgresql
+
+- name: Install PostgreSQL-14
+  ansible.builtin.dnf:
+    name:
+      - postgresql14-server
+      - postgresql14-contrib
+    state: latest
+
+- name: Check if Database is initialized
+  ansible.builtin.stat:
+    path: /var/lib/pgsql/14/data/pg_hba.conf
+  register: result
+
+- name: Initialize the database
+  ansible.builtin.shell: /usr/pgsql-14/bin/postgresql-14-setup initdb
+  when: not result.stat.exists
+
+- name: Template a file to /var/lib/pgsql/14/data/pg_hba.conf
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: /var/lib/pgsql/14/data/pg_hba.conf
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  run_once: true
+
+- name: Template a file to /var/lib/pgsql/14/data/postgresql.conf
+  ansible.builtin.template:
+    src: postgresql.conf.j2
+    dest: /var/lib/pgsql/14/data/postgresql.conf
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  run_once: true
+
+- name: Start the database service
+  ansible.builtin.service:
+    name: postgresql-14
+    state: started
+
+- name: Create a database for wordpress
+  community.postgresql.postgresql_db:
+    name: '{{ db_name }}'
+  become_user: postgres
+
+- name: create a user with super prvileges
+  community.postgresql.postgresql_user:
+    #db: '{{ db_name }}'
+    name: '{{ db_user }}'
+    password: '{{ db_pass }}'
+#    role_attr_flags: LOGIN
+  become_user: postgres
+
+- name: GRANT ALL PRIVILEGES ON DATABASE
+  community.postgresql.postgresql_privs:
+    db: '{{ db_name }}'
+    privs: ALL
+    type: database
+    role: '{{ db_user }}'
+  become_user: postgres
+

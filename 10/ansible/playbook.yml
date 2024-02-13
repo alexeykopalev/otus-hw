@@ -1,0 +1,21 @@
+---
+- name: Install Chrony
+  hosts: all
+  gather_facts: false
+  become: true
+  roles:
+  - chrony
+
+- name: install-postgresql
+  hosts: db_hosts
+  gather_facts: false
+  become: yes
+  roles:
+  - postgresql
+
+- name: install-wordpress
+  hosts: backend_hosts
+  gather_facts: false
+  become: yes
+  roles:
+  - wordpress
